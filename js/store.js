@@ -98,6 +98,18 @@ const AlRabaaStore = (() => {
       api(`/supervisions/${encodeURIComponent(id)}/visits`, { method: "POST", body: visit }),
     deleteSupervision: (id) => api(`/supervisions/${encodeURIComponent(id)}`, { method: "DELETE" }),
     getCatalog: () => api("/catalog"),
+    listProducts: () => api("/products"),
+    getProduct: (id) => api(`/products/${encodeURIComponent(id)}`),
+    upsertProduct: (input) =>
+      input.id
+        ? api(`/products/${encodeURIComponent(input.id)}`, { method: "PUT", body: input })
+        : api("/products", { method: "POST", body: input }),
+    deleteProduct: (id) => api(`/products/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    applyStockMovement: (productId, input) =>
+      api(`/products/${encodeURIComponent(productId)}/stock`, { method: "POST", body: input }),
+    listStockMovements: (limit) => api(`/stock-movements${limit ? `?limit=${limit}` : ""}`),
+    lowStockProducts: () => api("/products/low-stock"),
+    confirmInvoiceSale: (id) => api(`/invoices/${encodeURIComponent(id)}/confirm`, { method: "POST", body: {} }),
     exportBackup: async () => JSON.stringify(await api("/backup"), null, 2),
     importBackup: async (jsonText) => {
       const parsed = typeof jsonText === "string" ? JSON.parse(jsonText) : jsonText;

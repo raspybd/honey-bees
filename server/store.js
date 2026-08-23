@@ -29,11 +29,49 @@ const defaultCatalog = [
   { id: "svc-extract-extra", name: "فرز — خلية زيادة فوق 20", price: 2.5 },
 ];
 
+const SERVICE_PREFIXES = ["svc-"];
+
+function isServiceCatalogId(id) {
+  return SERVICE_PREFIXES.some((p) => String(id || "").startsWith(p));
+}
+
+function seedProductsFromCatalog() {
+  return defaultCatalog.map((item) => ({
+    id: item.id,
+    name: item.name,
+    unit: guessUnit(item.id, item.name),
+    sellPrice: Number(item.price) || 0,
+    costPrice: 0,
+    qty: 0,
+    minQty: isServiceCatalogId(item.id) ? 0 : 2,
+    trackStock: !isServiceCatalogId(item.id),
+    published: !isServiceCatalogId(item.id),
+    notes: "",
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }));
+}
+
+function guessUnit(id, name) {
+  const s = `${id} ${name}`;
+  if (/عسل|شمع|عكبر|honey|wax|propolis/i.test(s)) return "كيلو";
+  if (/طرد|bee-package/i.test(s)) return "طرد";
+  if (/ملكة|queen/i.test(s)) return "ملكة";
+  if (/خلية|إشراف|فرز|باقة|svc-|pkg-/i.test(s)) return "خدمة";
+  return "قطعة";
+}
+
+function roundQty(n) {
+  return Math.round((Number(n) || 0) * 1000) / 1000;
+}
+
 function empty() {
   return {
     customers: [],
     invoices: [],
     supervisions: [],
+    products: seedProductsFromCatalog(),
+    stockMovements: [],
     seq: 1000,
     catalog: defaultCatalog,
   };
@@ -51,14 +89,20 @@ function load() {
   try {
     const raw = fs.readFileSync(DB_FILE, "utf8");
     const data = JSON.parse(raw);
-    return {
+    const needsProductSeed = !Array.isArray(data.products) || !data.products.length;
+    const products = needsProductSeed ? seedProductsFromCatalog() : data.products;
+    const merged = {
       ...empty(),
       ...data,
       customers: Array.isArray(data.customers) ? data.customers : [],
       invoices: Array.isArray(data.invoices) ? data.invoices : [],
       supervisions: Array.isArray(data.supervisions) ? data.supervisions : [],
+      products,
+      stockMovements: Array.isArray(data.stockMovements) ? data.stockMovements : [],
       catalog: Array.isArray(data.catalog) && data.catalog.length ? data.catalog : defaultCatalog,
     };
+    if (needsProductSeed) save(merged);
+    return merged;
   } catch {
     const fresh = empty();
     save(fresh);
@@ -146,7 +190,9 @@ function calcItems(items) {
   return (items || []).map((item) => {
     const qty = Number(item.qty) || 0;
     const price = Number(item.price) || 0;
+    const productId = String(item.productId || "").trim();
     return {
+      productId: productId || undefined,
       name: String(item.name || "").trim(),
       qty,
       price,
@@ -193,6 +239,7 @@ function createInvoice(input) {
     total: sumItems(items),
     notes: String(input.notes || "").trim(),
     status: input.status || "issued",
+    stockDeducted: false,
     createdAt: now,
   };
   data.invoices.unshift(invoice);
@@ -201,10 +248,66 @@ function createInvoice(input) {
 }
 
 function updateInvoiceStatus(id, status) {
+  if (status === "paid") return confirmInvoiceSale(id);
   const data = load();
   const inv = data.invoices.find((i) => i.id === id);
   if (!inv) throw new Error("الفاتورة غير موجودة");
   inv.status = status;
+  inv.updatedAt = new Date().toISOString();
+  save(data);
+  return inv;
+}
+
+function confirmInvoiceSale(id) {
+  const data = load();
+  const inv = data.invoices.find((i) => i.id === id);
+  if (!inv) throw new Error("الفاتورة غير موجودة");
+  if (inv.status === "cancelled") throw new Error("لا يمكن تأكيد فاتورة ملغاة");
+
+  if (!inv.stockDeducted) {
+    const needs = [];
+    for (const item of inv.items || []) {
+      if (!item.productId) continue;
+      const product = data.products.find((p) => p.id === item.productId);
+      if (!product || !product.trackStock) continue;
+      const need = roundQty(item.qty);
+      if (need <= 0) continue;
+      needs.push({ product, need, item });
+    }
+    for (const { product, need } of needs) {
+      if (roundQty(product.qty) < need) {
+        throw new Error(
+          `المخزون غير كافٍ للصنف «${product.name}» (المتاح: ${roundQty(product.qty)} ${product.unit}، المطلوب: ${need})`
+        );
+      }
+    }
+    const now = new Date().toISOString();
+    if (!Array.isArray(data.stockMovements)) data.stockMovements = [];
+    for (const { product, need, item } of needs) {
+      const before = roundQty(product.qty);
+      const after = roundQty(before - need);
+      product.qty = after;
+      product.updatedAt = now;
+      data.stockMovements.unshift({
+        id: uid("stk"),
+        productId: product.id,
+        productName: product.name,
+        type: "sale",
+        qty: -need,
+        qtyBefore: before,
+        qtyAfter: after,
+        refType: "invoice",
+        refId: inv.id,
+        refLabel: inv.number,
+        note: item.name || "",
+        createdAt: now,
+      });
+    }
+    inv.stockDeducted = true;
+    inv.stockDeductedAt = now;
+  }
+
+  inv.status = "paid";
   inv.updatedAt = new Date().toISOString();
   save(data);
   return inv;
@@ -217,12 +320,148 @@ function deleteInvoice(id) {
 }
 
 function getCatalog() {
-  const saved = load().catalog || [];
-  const byId = new Map(saved.map((item) => [item.id, item]));
-  defaultCatalog.forEach((item) => {
-    if (!byId.has(item.id)) byId.set(item.id, item);
-  });
-  return Array.from(byId.values());
+  return listProducts().map((p) => ({
+    id: p.id,
+    name: p.name,
+    price: p.sellPrice,
+    unit: p.unit,
+    qty: p.qty,
+    trackStock: p.trackStock,
+    published: p.published,
+  }));
+}
+
+function listProducts() {
+  return load().products.slice().sort((a, b) => (a.name || "").localeCompare(b.name || "", "ar"));
+}
+
+function getProduct(id) {
+  return load().products.find((p) => p.id === id) || null;
+}
+
+function upsertProduct(input) {
+  const data = load();
+  if (!Array.isArray(data.products)) data.products = [];
+  const now = new Date().toISOString();
+  const name = String(input.name || "").trim();
+  if (!name) throw new Error("اسم الصنف مطلوب");
+
+  const fields = {
+    name,
+    unit: String(input.unit || "قطعة").trim() || "قطعة",
+    sellPrice: roundQty(input.sellPrice),
+    costPrice: roundQty(input.costPrice),
+    minQty: roundQty(input.minQty),
+    trackStock: input.trackStock !== false && input.trackStock !== "false",
+    published: Boolean(input.published === true || input.published === "true" || input.published === "on"),
+    notes: String(input.notes || "").trim(),
+    updatedAt: now,
+  };
+
+  if (input.id) {
+    const idx = data.products.findIndex((p) => p.id === input.id);
+    if (idx === -1) throw new Error("الصنف غير موجود");
+    data.products[idx] = {
+      ...data.products[idx],
+      ...fields,
+      qty: roundQty(data.products[idx].qty),
+    };
+    save(data);
+    return data.products[idx];
+  }
+
+  const product = {
+    id: uid("prd"),
+    ...fields,
+    qty: roundQty(input.qty),
+    createdAt: now,
+  };
+  data.products.unshift(product);
+  if (product.trackStock && product.qty > 0) {
+    if (!Array.isArray(data.stockMovements)) data.stockMovements = [];
+    data.stockMovements.unshift({
+      id: uid("stk"),
+      productId: product.id,
+      productName: product.name,
+      type: "adjust",
+      qty: product.qty,
+      qtyBefore: 0,
+      qtyAfter: product.qty,
+      refType: "opening",
+      refId: "",
+      refLabel: "رصيد افتتاحي",
+      note: "كمية افتتاحية",
+      createdAt: now,
+    });
+  }
+  save(data);
+  return product;
+}
+
+function deleteProduct(id) {
+  const data = load();
+  const used = data.invoices.some((inv) => (inv.items || []).some((i) => i.productId === id));
+  if (used) throw new Error("لا يمكن حذف صنف مرتبط بفواتير — أوقف تتبعه أو عدّل الفواتير");
+  data.products = data.products.filter((p) => p.id !== id);
+  save(data);
+}
+
+function listStockMovements(limit = 100) {
+  return (load().stockMovements || []).slice(0, Math.max(1, Number(limit) || 100));
+}
+
+function applyStockMovement(input) {
+  const data = load();
+  const product = data.products.find((p) => p.id === input.productId);
+  if (!product) throw new Error("الصنف غير موجود");
+  if (!product.trackStock) throw new Error("هذا الصنف لا يتتبع مخزونًا");
+
+  const type = String(input.type || "").trim();
+  const now = new Date().toISOString();
+  const before = roundQty(product.qty);
+  let delta = 0;
+  let after = before;
+
+  if (type === "purchase" || type === "in") {
+    delta = roundQty(input.qty);
+    if (delta <= 0) throw new Error("أدخل كمية موجبة للدخول");
+    after = roundQty(before + delta);
+  } else if (type === "damage" || type === "out" || type === "sale") {
+    delta = -Math.abs(roundQty(input.qty));
+    if (delta === 0) throw new Error("أدخل كمية للخروج");
+    after = roundQty(before + delta);
+    if (after < 0) throw new Error(`الكمية غير كافية (المتاح: ${before})`);
+  } else if (type === "adjust") {
+    after = roundQty(input.qty);
+    delta = roundQty(after - before);
+  } else {
+    throw new Error("نوع الحركة غير صالح");
+  }
+
+  product.qty = after;
+  product.updatedAt = now;
+  if (!Array.isArray(data.stockMovements)) data.stockMovements = [];
+  const movement = {
+    id: uid("stk"),
+    productId: product.id,
+    productName: product.name,
+    type: type === "in" ? "purchase" : type === "out" ? "damage" : type,
+    qty: delta,
+    qtyBefore: before,
+    qtyAfter: after,
+    refType: "manual",
+    refId: "",
+    refLabel: "",
+    note: String(input.note || "").trim(),
+    createdAt: now,
+  };
+  data.stockMovements.unshift(movement);
+  save(data);
+  return { product, movement };
+}
+
+function lowStockProducts() {
+  return listProducts().filter((p) => p.trackStock && roundQty(p.qty) <= roundQty(p.minQty));
 }
 
 function listSupervisions() {
@@ -329,6 +568,11 @@ function importBackup(parsed) {
     ...empty(),
     ...parsed,
     supervisions: Array.isArray(parsed.supervisions) ? parsed.supervisions : [],
+    products:
+      Array.isArray(parsed.products) && parsed.products.length
+        ? parsed.products
+        : seedProductsFromCatalog(),
+    stockMovements: Array.isArray(parsed.stockMovements) ? parsed.stockMovements : [],
     catalog: Array.isArray(parsed.catalog) && parsed.catalog.length ? parsed.catalog : defaultCatalog,
   });
   return load();
@@ -343,7 +587,15 @@ module.exports = {
   getInvoice,
   createInvoice,
   updateInvoiceStatus,
+  confirmInvoiceSale,
   deleteInvoice,
+  listProducts,
+  getProduct,
+  upsertProduct,
+  deleteProduct,
+  listStockMovements,
+  applyStockMovement,
+  lowStockProducts,
   listSupervisions,
   getSupervision,
   upsertSupervision,

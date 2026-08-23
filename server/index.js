@@ -70,6 +70,31 @@ app.post("/api/logout", requireAuth, (req, res) => {
 
 app.get("/api/catalog", requireAuth, (_req, res) => handle(res, () => store.getCatalog()));
 
+app.get("/api/products", requireAuth, (_req, res) => handle(res, () => store.listProducts()));
+app.get("/api/products/low-stock", requireAuth, (_req, res) => handle(res, () => store.lowStockProducts()));
+app.get("/api/products/:id", requireAuth, (req, res) => {
+  const item = store.getProduct(req.params.id);
+  if (!item) return res.status(404).json({ error: "الصنف غير موجود" });
+  res.json(item);
+});
+app.post("/api/products", requireAuth, (req, res) => handle(res, () => store.upsertProduct(req.body || {})));
+app.put("/api/products/:id", requireAuth, (req, res) =>
+  handle(res, () => store.upsertProduct({ ...(req.body || {}), id: req.params.id }))
+);
+app.delete("/api/products/:id", requireAuth, (req, res) =>
+  handle(res, () => {
+    store.deleteProduct(req.params.id);
+    return { ok: true };
+  })
+);
+app.post("/api/products/:id/stock", requireAuth, (req, res) =>
+  handle(res, () => store.applyStockMovement({ ...(req.body || {}), productId: req.params.id }))
+);
+
+app.get("/api/stock-movements", requireAuth, (req, res) =>
+  handle(res, () => store.listStockMovements(req.query.limit))
+);
+
 app.get("/api/customers", requireAuth, (_req, res) => handle(res, () => store.listCustomers()));
 app.get("/api/customers/:id", requireAuth, (req, res) => {
   const item = store.getCustomer(req.params.id);
@@ -96,6 +121,9 @@ app.get("/api/invoices/:id", requireAuth, (req, res) => {
 app.post("/api/invoices", requireAuth, (req, res) => handle(res, () => store.createInvoice(req.body || {})));
 app.patch("/api/invoices/:id/status", requireAuth, (req, res) =>
   handle(res, () => store.updateInvoiceStatus(req.params.id, req.body?.status))
+);
+app.post("/api/invoices/:id/confirm", requireAuth, (req, res) =>
+  handle(res, () => store.confirmInvoiceSale(req.params.id))
 );
 app.delete("/api/invoices/:id", requireAuth, (req, res) =>
   handle(res, () => {

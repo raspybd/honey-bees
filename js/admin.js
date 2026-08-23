@@ -28,6 +28,7 @@
     document.querySelectorAll(".side-tab[data-tab]").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
     document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === `panel-${name}`));
     if (name === "customers") await renderCustomers();
+    if (name === "products") await renderProducts();
     if (name === "invoices") await renderInvoices();
     if (name === "create") await prepareInvoiceForm();
     if (name === "supervision") await renderSupervisions();
@@ -130,6 +131,182 @@
     }
   });
 
+  const productForm = document.getElementById("product-form");
+  const stockForm = document.getElementById("stock-form");
+  const productsBody = document.getElementById("products-body");
+  const movementsBody = document.getElementById("movements-body");
+  const movementTypeLabel = {
+    purchase: "دخول",
+    sale: "بيع",
+    damage: "تلف/خروج",
+    adjust: "جرد",
+  };
+
+  function resetProductForm() {
+    productForm.reset();
+    document.getElementById("product-id").value = "";
+    document.getElementById("product-track").checked = true;
+    document.getElementById("product-published").checked = true;
+    document.getElementById("product-qty-wrap").classList.remove("hidden");
+    productForm.classList.add("hidden");
+  }
+
+  function resetStockForm() {
+    stockForm.reset();
+    document.getElementById("stock-product-id").value = "";
+    stockForm.classList.add("hidden");
+  }
+
+  document.getElementById("btn-new-product").addEventListener("click", () => {
+    resetStockForm();
+    resetProductForm();
+    productForm.classList.remove("hidden");
+    document.getElementById("product-name").focus();
+  });
+  document.getElementById("btn-cancel-product").addEventListener("click", resetProductForm);
+  document.getElementById("btn-cancel-stock").addEventListener("click", resetStockForm);
+  document.getElementById("product-search").addEventListener("input", () => renderProducts());
+
+  productForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const id = document.getElementById("product-id").value || undefined;
+      const payload = {
+        id,
+        name: document.getElementById("product-name").value,
+        unit: document.getElementById("product-unit").value,
+        sellPrice: document.getElementById("product-sell").value,
+        costPrice: document.getElementById("product-cost").value,
+        minQty: document.getElementById("product-min").value,
+        trackStock: document.getElementById("product-track").checked,
+        published: document.getElementById("product-published").checked,
+        notes: document.getElementById("product-notes").value,
+      };
+      if (!id) payload.qty = document.getElementById("product-qty").value;
+      await AlRabaaStore.upsertProduct(payload);
+      resetProductForm();
+      await renderProducts();
+      toast("تم حفظ الصنف");
+    } catch (err) {
+      toast(err.message || "تعذر الحفظ");
+    }
+  });
+
+  stockForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await AlRabaaStore.applyStockMovement(document.getElementById("stock-product-id").value, {
+        type: document.getElementById("stock-type").value,
+        qty: document.getElementById("stock-qty").value,
+        note: document.getElementById("stock-note").value,
+      });
+      resetStockForm();
+      await renderProducts();
+      toast("تم تسجيل حركة المخزون");
+    } catch (err) {
+      toast(err.message || "تعذر التسجيل");
+    }
+  });
+
+  async function renderProducts() {
+    const q = (document.getElementById("product-search").value || "").trim().toLowerCase();
+    const [products, low, movements] = await Promise.all([
+      AlRabaaStore.listProducts(),
+      AlRabaaStore.lowStockProducts(),
+      AlRabaaStore.listStockMovements(30),
+    ]);
+    const banner = document.getElementById("low-stock-banner");
+    if (low.length) {
+      banner.classList.remove("hidden");
+      banner.textContent = `تنبيه مخزون منخفض: ${low.map((p) => `${p.name} (${money(p.qty)} ${p.unit})`).join(" · ")}`;
+    } else {
+      banner.classList.add("hidden");
+      banner.textContent = "";
+    }
+
+    const rows = products.filter(
+      (p) => !q || p.name.toLowerCase().includes(q) || (p.unit || "").includes(q)
+    );
+    productsBody.innerHTML = rows.length
+      ? rows
+          .map((p) => {
+            const lowFlag = p.trackStock && Number(p.qty) <= Number(p.minQty);
+            return `
+      <tr class="${lowFlag ? "row-alert" : ""}">
+        <td><strong>${escapeHtml(p.name)}</strong>${p.published ? `<div class="muted">للمتجر</div>` : ""}</td>
+        <td>${escapeHtml(p.unit)}</td>
+        <td>${p.trackStock ? `${money(p.qty)}` : "—"}</td>
+        <td>${money(p.sellPrice)} د.ك</td>
+        <td>${money(p.costPrice)} د.ك</td>
+        <td>${p.trackStock ? (lowFlag ? `<span class="badge cancelled">منخفض</span>` : `<span class="badge paid">متوفر</span>`) : `<span class="badge">خدمة</span>`}</td>
+        <td class="actions">
+          ${p.trackStock ? `<button type="button" data-stock="${p.id}" data-name="${escapeHtml(p.name)}">حركة</button>` : ""}
+          <button type="button" data-edit-product="${p.id}">تعديل</button>
+          <button type="button" data-del-product="${p.id}" class="danger">حذف</button>
+        </td>
+      </tr>`;
+          })
+          .join("")
+      : `<tr><td colspan="7" class="empty">لا توجد أصناف.</td></tr>`;
+
+    movementsBody.innerHTML = movements.length
+      ? movements
+          .map(
+            (m) => `
+      <tr>
+        <td>${escapeHtml((m.createdAt || "").slice(0, 16).replace("T", " "))}</td>
+        <td>${escapeHtml(m.productName)}</td>
+        <td>${movementTypeLabel[m.type] || m.type}</td>
+        <td dir="ltr">${m.qty > 0 ? "+" : ""}${money(m.qty)}</td>
+        <td dir="ltr">${money(m.qtyBefore)} ← ${money(m.qtyAfter)}</td>
+        <td>${escapeHtml(m.refLabel || m.refType || "")}</td>
+        <td>${escapeHtml(m.note || "")}</td>
+      </tr>`
+          )
+          .join("")
+      : `<tr><td colspan="7" class="empty">لا حركات بعد.</td></tr>`;
+  }
+
+  productsBody.addEventListener("click", async (e) => {
+    const editId = e.target.getAttribute("data-edit-product");
+    const delId = e.target.getAttribute("data-del-product");
+    const stockId = e.target.getAttribute("data-stock");
+    try {
+      if (stockId) {
+        resetProductForm();
+        document.getElementById("stock-product-id").value = stockId;
+        document.getElementById("stock-form-title").textContent =
+          `حركة مخزون — ${e.target.getAttribute("data-name") || ""}`;
+        stockForm.classList.remove("hidden");
+        stockForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      if (editId) {
+        resetStockForm();
+        const p = await AlRabaaStore.getProduct(editId);
+        document.getElementById("product-id").value = p.id;
+        document.getElementById("product-name").value = p.name || "";
+        document.getElementById("product-unit").value = p.unit || "قطعة";
+        document.getElementById("product-sell").value = p.sellPrice ?? "";
+        document.getElementById("product-cost").value = p.costPrice ?? 0;
+        document.getElementById("product-min").value = p.minQty ?? 0;
+        document.getElementById("product-track").checked = p.trackStock !== false;
+        document.getElementById("product-published").checked = Boolean(p.published);
+        document.getElementById("product-notes").value = p.notes || "";
+        document.getElementById("product-qty-wrap").classList.add("hidden");
+        productForm.classList.remove("hidden");
+        productForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+      if (delId) {
+        if (!confirm("حذف هذا الصنف؟")) return;
+        await AlRabaaStore.deleteProduct(delId);
+        await renderProducts();
+        toast("تم حذف الصنف");
+      }
+    } catch (err) {
+      toast(err.message || "تعذر تنفيذ الإجراء");
+    }
+  });
+
   const invoicesBody = document.getElementById("invoices-body");
 
   async function renderInvoices() {
@@ -143,10 +320,17 @@
         <td>${escapeHtml(inv.customerName)}<div class="muted" dir="ltr">${escapeHtml(inv.customerPhone || "")}</div></td>
         <td>${escapeHtml(inv.date)}</td>
         <td>${money(inv.total)} د.ك</td>
-        <td><span class="badge ${inv.status}">${statusLabel[inv.status] || inv.status}</span></td>
+        <td>
+          <span class="badge ${inv.status}">${statusLabel[inv.status] || inv.status}</span>
+          ${inv.stockDeducted ? `<div class="muted">خُصم المخزون</div>` : inv.status === "issued" ? `<div class="muted">بانتظار التأكيد</div>` : ""}
+        </td>
         <td class="actions">
           <a href="invoice.html?id=${encodeURIComponent(inv.id)}" target="_blank">عرض/طباعة</a>
-          <button type="button" data-status="${inv.id}|paid">مدفوعة</button>
+          ${
+            inv.stockDeducted
+              ? `<button type="button" data-status="${inv.id}|paid" ${inv.status === "paid" ? "disabled" : ""}>مدفوعة</button>`
+              : `<button type="button" data-confirm-inv="${inv.id}">تأكيد وخصم المخزون</button>`
+          }
           <button type="button" data-wa-inv="${inv.id}">واتساب</button>
           <button type="button" data-del-inv="${inv.id}" class="danger">حذف</button>
         </td>
@@ -158,9 +342,16 @@
 
   invoicesBody.addEventListener("click", async (e) => {
     const status = e.target.getAttribute("data-status");
+    const confirmInv = e.target.getAttribute("data-confirm-inv");
     const wa = e.target.getAttribute("data-wa-inv");
     const del = e.target.getAttribute("data-del-inv");
     try {
+      if (confirmInv) {
+        if (!confirm("تأكيد البيع وخصم الكميات من المخزون؟")) return;
+        await AlRabaaStore.confirmInvoiceSale(confirmInv);
+        await renderInvoices();
+        toast("تم التأكيد وخصم المخزون");
+      }
       if (status) {
         const [id, st] = status.split("|");
         await AlRabaaStore.updateInvoiceStatus(id, st);
@@ -201,7 +392,10 @@
     const row = document.createElement("div");
     row.className = "item-row";
     const options = catalogCache
-      .map((p) => `<option value="${p.id}" data-price="${p.price}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} — ${money(p.price)} د.ك</option>`)
+      .map((p) => {
+        const stockHint = p.trackStock ? ` · متاح ${money(p.qty)}` : "";
+        return `<option value="${p.id}" data-price="${p.price}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} — ${money(p.price)} د.ك${stockHint}</option>`;
+      })
       .join("");
     row.innerHTML = `
       <select class="item-product">
@@ -243,6 +437,7 @@
 
   function collectItems() {
     return [...itemsEl.querySelectorAll(".item-row")].map((row) => ({
+      productId: row.querySelector(".item-product").value || undefined,
       name: row.querySelector(".item-name").value,
       qty: row.querySelector(".item-qty").value,
       price: row.querySelector(".item-price").value,

@@ -41,6 +41,7 @@
   <div class="admin-shell wrap">
     <aside class="admin-side-tabs" aria-label="أقسام الإدارة">
       <button type="button" class="side-tab active" data-tab="customers">سجل العملاء</button>
+      <button type="button" class="side-tab" data-tab="products">الأصناف والمخزون</button>
       <button type="button" class="side-tab" data-tab="supervision">متابعة الإشراف</button>
       <button type="button" class="side-tab" data-tab="invoices">الفواتير</button>
       <button type="button" class="side-tab" data-tab="create">فاتورة جديدة</button>
@@ -87,6 +88,108 @@
             </tr>
           </thead>
           <tbody id="customers-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-products" class="panel">
+      <div class="panel-head">
+        <div>
+          <h1>الأصناف والمخزون</h1>
+          <p>إدارة البضاعة والكميات. الخصم من المخزون يتم عند تأكيد الفاتورة (مدفوعة).</p>
+        </div>
+        <button type="button" class="btn btn-gold" id="btn-new-product">صنف جديد</button>
+      </div>
+
+      <div id="low-stock-banner" class="alert-banner hidden"></div>
+
+      <form id="product-form" class="card form-card hidden">
+        <input type="hidden" id="product-id" />
+        <div class="form-grid">
+          <label>اسم الصنف <input id="product-name" required placeholder="مثل: طرد نحل" /></label>
+          <label>الوحدة
+            <select id="product-unit">
+              <option value="قطعة">قطعة</option>
+              <option value="طرد">طرد</option>
+              <option value="ملكة">ملكة</option>
+              <option value="كيلو">كيلو</option>
+              <option value="خدمة">خدمة</option>
+              <option value="باقة">باقة</option>
+            </select>
+          </label>
+          <label>سعر البيع (د.ك) <input id="product-sell" type="number" min="0" step="0.001" required /></label>
+          <label>تكلفة تقريبية (د.ك) <input id="product-cost" type="number" min="0" step="0.001" value="0" /></label>
+          <label>حد التنبيه <input id="product-min" type="number" min="0" step="0.001" value="2" /></label>
+          <label id="product-qty-wrap">الكمية الافتتاحية <input id="product-qty" type="number" min="0" step="0.001" value="0" /></label>
+          <label class="check-label"><input type="checkbox" id="product-track" checked /> تتبع المخزون</label>
+          <label class="check-label"><input type="checkbox" id="product-published" checked /> منشور للمتجر لاحقًا</label>
+          <label class="full">ملاحظات <textarea id="product-notes" rows="2"></textarea></label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-dark">حفظ الصنف</button>
+          <button type="button" class="btn btn-ghost-dark" id="btn-cancel-product">إلغاء</button>
+        </div>
+      </form>
+
+      <form id="stock-form" class="card form-card hidden">
+        <input type="hidden" id="stock-product-id" />
+        <h2 class="subhead" id="stock-form-title">حركة مخزون</h2>
+        <div class="form-grid">
+          <label>النوع
+            <select id="stock-type">
+              <option value="purchase">دخول / شراء</option>
+              <option value="damage">خروج / تلف</option>
+              <option value="adjust">تعديل الجرد (تعيين الكمية)</option>
+            </select>
+          </label>
+          <label>الكمية <input id="stock-qty" type="number" min="0" step="0.001" required /></label>
+          <label class="full">ملاحظة <input id="stock-note" placeholder="اختياري" /></label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-dark">تسجيل الحركة</button>
+          <button type="button" class="btn btn-ghost-dark" id="btn-cancel-stock">إلغاء</button>
+        </div>
+      </form>
+
+      <div class="toolbar">
+        <input type="search" id="product-search" placeholder="بحث في الأصناف..." />
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>الصنف</th>
+              <th>الوحدة</th>
+              <th>الكمية</th>
+              <th>سعر البيع</th>
+              <th>التكلفة</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="products-body"></tbody>
+        </table>
+      </div>
+
+      <div class="panel-head" style="margin-top:1.5rem">
+        <div>
+          <h2 class="subhead">آخر حركات المخزون</h2>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>الصنف</th>
+              <th>النوع</th>
+              <th>الكمية</th>
+              <th>قبل ← بعد</th>
+              <th>مرجع</th>
+              <th>ملاحظة</th>
+            </tr>
+          </thead>
+          <tbody id="movements-body"></tbody>
         </table>
       </div>
     </section>
