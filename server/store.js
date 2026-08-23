@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const DATA_DIR = path.join(__dirname, "..", "data");
 const DB_FILE = path.join(DATA_DIR, "db.json");
@@ -77,6 +78,7 @@ function empty() {
     cashEntries: [],
     orders: [],
     carts: [],
+    accounts: [],
     purchaseSeq: 5000,
     orderSeq: 7000,
     seq: 1000,
@@ -111,6 +113,7 @@ function load() {
       cashEntries: Array.isArray(data.cashEntries) ? data.cashEntries : [],
       orders: Array.isArray(data.orders) ? data.orders : [],
       carts: Array.isArray(data.carts) ? data.carts : [],
+      accounts: Array.isArray(data.accounts) ? data.accounts : [],
       catalog: Array.isArray(data.catalog) && data.catalog.length ? data.catalog : defaultCatalog,
     };
     if (needsProductSeed) save(merged);
@@ -148,6 +151,100 @@ function parseHiveNumbers(raw) {
     .split(/[\n,،\s]+/)
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+function normalizeAccountPhone(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("965") && digits.length >= 11) return digits;
+  if (digits.length === 8) return `965${digits}`;
+  return digits;
+}
+
+function hashPassword(password, salt) {
+  return crypto.scryptSync(String(password), salt, 32).toString("hex");
+}
+
+function publicAccount(account) {
+  if (!account) return null;
+  return {
+    id: account.id,
+    name: account.name,
+    phone: account.phone,
+    customerId: account.customerId || "",
+    createdAt: account.createdAt,
+  };
+}
+
+function findAccountByPhone(data, phone) {
+  const key = normalizeAccountPhone(phone);
+  return (data.accounts || []).find((a) => normalizeAccountPhone(a.phone) === key) || null;
+}
+
+function ensureCustomerForAccount(data, name, phone) {
+  const key = normalizeAccountPhone(phone);
+  let customer = data.customers.find((c) => normalizeAccountPhone(c.phone) === key);
+  const now = new Date().toISOString();
+  if (customer) {
+    customer.name = name || customer.name;
+    customer.phone = phone;
+    customer.updatedAt = now;
+    return customer;
+  }
+  customer = {
+    id: uid("cus"),
+    name,
+    phone,
+    area: "",
+    notes: "حساب متجر",
+    createdAt: now,
+    updatedAt: now,
+  };
+  data.customers.unshift(customer);
+  return customer;
+}
+
+function registerAccount(input) {
+  const data = load();
+  if (!Array.isArray(data.accounts)) data.accounts = [];
+  const name = String(input.name || "").trim();
+  const phone = String(input.phone || "").trim();
+  const password = String(input.password || "");
+  if (!name) throw new Error("الاسم مطلوب");
+  if (!normalizeAccountPhone(phone)) throw new Error("رقم الجوال مطلوب");
+  if (password.length < 4) throw new Error("كلمة المرور يجب أن تكون 4 أحرف على الأقل");
+  if (findAccountByPhone(data, phone)) throw new Error("يوجد حساب بهذا الجوال — سجّل الدخول");
+
+  const salt = crypto.randomBytes(16).toString("hex");
+  const customer = ensureCustomerForAccount(data, name, phone);
+  const account = {
+    id: uid("acc"),
+    name,
+    phone,
+    passwordHash: hashPassword(password, salt),
+    salt,
+    customerId: customer.id,
+    createdAt: new Date().toISOString(),
+  };
+  data.accounts.unshift(account);
+  save(data);
+  return publicAccount(account);
+}
+
+function loginAccount(input) {
+  const data = load();
+  const phone = String(input.phone || "").trim();
+  const password = String(input.password || "");
+  const account = findAccountByPhone(data, phone);
+  if (!account) throw new Error("الحساب غير موجود");
+  const hash = hashPassword(password, account.salt);
+  if (hash !== account.passwordHash) throw new Error("كلمة المرور غير صحيحة");
+  return publicAccount(account);
+}
+
+function getAccount(id) {
+  const account = (load().accounts || []).find((a) => a.id === id) || null;
+  return publicAccount(account);
 }
 
 function listCustomers() {
@@ -956,9 +1053,12 @@ function upsertStoreCart(input) {
   const phone = String(input.phone || "").trim();
   const area = String(input.area || "").trim();
   const notes = String(input.notes || "").trim();
+  const accountId = String(input.accountId || "").trim();
   const total = roundQty(items.reduce((s, i) => s + i.total, 0));
 
-  let cart = data.carts.find((c) => c.sessionId === sessionId && c.status !== "ordered");
+  let cart =
+    data.carts.find((c) => c.sessionId === sessionId && c.status !== "ordered") ||
+    (accountId ? data.carts.find((c) => c.accountId === accountId && c.status !== "ordered") : null);
   if (!items.length) {
     if (cart && cart.status !== "ordered") {
       cart.items = [];
@@ -968,6 +1068,7 @@ function upsertStoreCart(input) {
       cart.phone = phone || cart.phone || "";
       cart.area = area || cart.area || "";
       cart.notes = notes || cart.notes || "";
+      if (accountId) cart.accountId = accountId;
       cart.updatedAt = now;
       save(data);
       return cart;
@@ -976,21 +1077,24 @@ function upsertStoreCart(input) {
   }
 
   let status = "active";
-  if (customerName || phone) status = "checkout";
+  if (customerName || phone || accountId) status = "checkout";
 
   if (cart) {
+    cart.sessionId = sessionId;
     cart.items = items;
     cart.total = total;
     cart.customerName = customerName || cart.customerName || "";
     cart.phone = phone || cart.phone || "";
     cart.area = area || cart.area || "";
     cart.notes = notes || cart.notes || "";
+    if (accountId) cart.accountId = accountId;
     if (cart.status !== "ordered") cart.status = status;
     cart.updatedAt = now;
   } else {
     cart = {
       id: uid("cart"),
       sessionId,
+      accountId: accountId || "",
       status,
       customerName,
       phone,
@@ -1283,6 +1387,7 @@ function importBackup(parsed) {
     cashEntries: Array.isArray(parsed.cashEntries) ? parsed.cashEntries : [],
     orders: Array.isArray(parsed.orders) ? parsed.orders : [],
     carts: Array.isArray(parsed.carts) ? parsed.carts : [],
+    accounts: Array.isArray(parsed.accounts) ? parsed.accounts : [],
     catalog: Array.isArray(parsed.catalog) && parsed.catalog.length ? parsed.catalog : defaultCatalog,
   });
   return load();
@@ -1293,6 +1398,9 @@ module.exports = {
   getCustomer,
   upsertCustomer,
   deleteCustomer,
+  registerAccount,
+  loginAccount,
+  getAccount,
   listInvoices,
   getInvoice,
   createInvoice,

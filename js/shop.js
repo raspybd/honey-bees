@@ -49,13 +49,21 @@
     clearTimeout(syncTimer);
     syncTimer = setTimeout(async () => {
       try {
+        if (!window.AlRabaaAuth?.isLoggedIn?.()) return;
+        const headers = { "Content-Type": "application/json" };
+        const token = window.AlRabaaAuth.getToken();
+        if (token) headers.Authorization = `Bearer ${token}`;
+        const account = window.AlRabaaAuth.getAccount() || {};
         await fetch("/api/store/carts", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers,
           body: JSON.stringify({
             sessionId: getSessionId(),
             items: cart.map((i) => ({ productId: i.productId, qty: i.qty })),
-            ...contactPayload(),
+            customerName: document.getElementById("shop-name")?.value || account.name || "",
+            phone: document.getElementById("shop-phone")?.value || account.phone || "",
+            area: document.getElementById("shop-area")?.value || "",
+            notes: document.getElementById("shop-notes")?.value || "",
           }),
         });
       } catch (err) {
@@ -255,17 +263,21 @@
     const btn = checkoutForm.querySelector('button[type="submit"]');
     if (btn) btn.disabled = true;
     try {
+      const account = window.AlRabaaAuth?.getAccount?.() || {};
       const payload = {
         sessionId: getSessionId(),
-        customerName: document.getElementById("shop-name").value,
-        phone: document.getElementById("shop-phone").value,
+        customerName: document.getElementById("shop-name").value || account.name || "",
+        phone: document.getElementById("shop-phone").value || account.phone || "",
         area: document.getElementById("shop-area").value,
         notes: document.getElementById("shop-notes").value,
         items: cart.map((i) => ({ productId: i.productId, qty: i.qty })),
       };
+      const headers = { "Content-Type": "application/json" };
+      const token = window.AlRabaaAuth?.getToken?.();
+      if (token) headers.Authorization = `Bearer ${token}`;
       const res = await fetch("/api/store/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -302,6 +314,16 @@
 
   getSessionId();
   renderCart();
-  if (cart.length) syncCartToServer();
+  window.addEventListener("alrabaa:auth", () => {
+    const account = window.AlRabaaAuth?.getAccount?.();
+    if (account) {
+      const name = document.getElementById("shop-name");
+      const phone = document.getElementById("shop-phone");
+      if (name) name.value = account.name || "";
+      if (phone) phone.value = account.phone || "";
+      if (cart.length) syncCartToServer();
+    }
+  });
+  if (cart.length && window.AlRabaaAuth?.isLoggedIn?.()) syncCartToServer();
   if (location.hash.replace("#", "") === "shop") fetchCatalog();
 })();

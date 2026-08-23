@@ -22,9 +22,19 @@
           <small>AL RABAA</small>
         </span>
       </a>
-      <button type="button" class="cart-chip" id="btn-open-cart" aria-label="فتح السلة" aria-controls="cart-drawer">
-        السلة <span data-cart-count hidden>0</span>
-      </button>
+      <div class="header-actions">
+        <div id="account-chip" class="account-chip">
+          <button type="button" class="btn btn-outline account-login-btn" id="btn-open-login">دخول</button>
+          <div class="account-logged" id="account-logged" hidden>
+            <span class="account-label">حسابي</span>
+            <strong id="account-name"></strong>
+            <button type="button" class="account-logout" id="btn-logout-account">خروج</button>
+          </div>
+        </div>
+        <button type="button" class="cart-chip" id="btn-open-cart" aria-label="فتح السلة" aria-controls="cart-drawer">
+          السلة <span data-cart-count hidden>0</span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -530,6 +540,26 @@
     </main>
   </div>
 
+  <div id="auth-modal" class="auth-modal" hidden>
+    <button type="button" class="auth-backdrop" data-close-auth aria-label="إغلاق"></button>
+    <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+      <button type="button" class="cart-close" data-close-auth aria-label="إغلاق">×</button>
+      <h2 id="auth-title">تسجيل الدخول</h2>
+      <p class="auth-lead">للتسوق وإضافة المنتجات، سجّل الدخول أو أنشئ حسابًا.</p>
+      <div class="auth-tabs">
+        <button type="button" class="auth-tab active" data-auth-mode="login">دخول</button>
+        <button type="button" class="auth-tab" data-auth-mode="register">حساب جديد</button>
+      </div>
+      <form id="auth-form" class="auth-form">
+        <label id="auth-name-wrap" hidden>الاسم <input id="auth-name" autocomplete="name" /></label>
+        <label>الجوال <input id="auth-phone" required autocomplete="tel" inputmode="tel" /></label>
+        <label>كلمة المرور <input id="auth-password" type="password" required autocomplete="current-password" minlength="4" /></label>
+        <p id="auth-error" class="auth-error" hidden></p>
+        <button type="submit" class="btn btn-gold btn-lg" id="auth-submit">دخول</button>
+      </form>
+    </div>
+  </div>
+
   <div id="cart-drawer" class="cart-drawer" hidden>
     <button type="button" class="cart-drawer-backdrop" data-close-cart aria-label="إغلاق السلة"></button>
     <aside class="cart-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title">
@@ -569,6 +599,7 @@
     document.getElementById("year").textContent = new Date().getFullYear();
   </script>
   <script src="js/pricing.js"></script>
+  <script src="js/auth.js"></script>
   <script src="js/tabs.js"></script>
   <script src="js/shop.js"></script>
   <script>

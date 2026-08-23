@@ -10,6 +10,7 @@ const PORT = Number(process.env.PORT) || 3000;
 const SITE_URL = process.env.SITE_URL || "https://the4beez.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "alrabaa2026";
 const tokens = new Map();
+const customerTokens = new Map(); // token -> { accountId, at }
 
 app.set("trust proxy", 1);
 app.use(cors());
@@ -29,8 +30,21 @@ function requireAuth(req, res, next) {
   if (!token || !tokens.has(token)) {
     return res.status(401).json({ error: "غير مصرح — سجّل الدخول أولًا" });
   }
-  // refresh activity timestamp
   tokens.set(token, Date.now());
+  next();
+}
+
+function requireCustomer(req, res, next) {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const session = token ? customerTokens.get(token) : null;
+  if (!session?.accountId) {
+    return res.status(401).json({ error: "سجّل الدخول أولًا للمتابعة" });
+  }
+  session.at = Date.now();
+  customerTokens.set(token, session);
+  req.customerToken = token;
+  req.accountId = session.accountId;
   next();
 }
 
@@ -52,9 +66,62 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+app.post("/api/store/register", (req, res) => {
+  try {
+    const account = store.registerAccount(req.body || {});
+    const token = createToken();
+    customerTokens.set(token, { accountId: account.id, at: Date.now() });
+    res.json({ token, account });
+  } catch (err) {
+    res.status(400).json({ error: err.message || "تعذر إنشاء الحساب" });
+  }
+});
+
+app.post("/api/store/login", (req, res) => {
+  try {
+    const account = store.loginAccount(req.body || {});
+    const token = createToken();
+    customerTokens.set(token, { accountId: account.id, at: Date.now() });
+    res.json({ token, account });
+  } catch (err) {
+    res.status(401).json({ error: err.message || "تعذر تسجيل الدخول" });
+  }
+});
+
+app.get("/api/store/me", requireCustomer, (req, res) => {
+  const account = store.getAccount(req.accountId);
+  if (!account) return res.status(401).json({ error: "الحساب غير موجود" });
+  res.json({ account });
+});
+
+app.post("/api/store/logout", requireCustomer, (req, res) => {
+  customerTokens.delete(req.customerToken);
+  res.json({ ok: true });
+});
+
 app.get("/api/store/catalog", (_req, res) => handle(res, () => store.getStoreCatalog()));
-app.post("/api/store/carts", (req, res) => handle(res, () => store.upsertStoreCart(req.body || {})));
-app.post("/api/store/orders", (req, res) => handle(res, () => store.createStoreOrder(req.body || {})));
+app.post("/api/store/carts", requireCustomer, (req, res) => {
+  const account = store.getAccount(req.accountId);
+  handle(res, () =>
+    store.upsertStoreCart({
+      ...(req.body || {}),
+      accountId: req.accountId,
+      customerName: (req.body && req.body.customerName) || account?.name || "",
+      phone: (req.body && req.body.phone) || account?.phone || "",
+    })
+  );
+});
+app.post("/api/store/orders", requireCustomer, (req, res) => {
+  const account = store.getAccount(req.accountId);
+  handle(res, () =>
+    store.createStoreOrder({
+      ...(req.body || {}),
+      accountId: req.accountId,
+      customerName: (req.body && req.body.customerName) || account?.name || "",
+      phone: (req.body && req.body.phone) || account?.phone || "",
+    })
+  );
+});
 
 app.post("/api/login", (req, res) => {
   const password = String(req.body?.password || "");

@@ -1189,6 +1189,163 @@ button.btn {
   }
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.account-chip {
+  display: flex;
+  align-items: center;
+}
+
+.account-login-btn {
+  padding: 0.4rem 0.85rem;
+  font-size: 0.9rem;
+}
+
+.account-logged {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: #fff8e8;
+  border: 1px solid rgba(42, 28, 14, 0.15);
+  border-radius: 999px;
+  padding: 0.35rem 0.75rem;
+  max-width: min(280px, 70vw);
+}
+
+.account-label {
+  font-size: 0.75rem;
+  color: #8a7358;
+  font-weight: 700;
+}
+
+.account-logged strong {
+  font-size: 0.92rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.account-logout {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: #8a1f1f;
+  font: inherit;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0.15rem 0.25rem;
+}
+
+.auth-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.auth-modal[hidden] {
+  display: none !important;
+}
+
+.auth-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(26, 18, 8, 0.5);
+  cursor: pointer;
+}
+
+.auth-card {
+  position: relative;
+  z-index: 1;
+  width: min(420px, 100%);
+  background: #fffdf8;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 1.35rem 1.25rem 1.4rem;
+  box-shadow: 0 24px 50px rgba(26, 18, 8, 0.25);
+}
+
+.auth-card .cart-close {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+}
+
+.auth-card h2 {
+  margin: 0 0 0.35rem;
+  font-family: "Noto Naskh Arabic", serif;
+}
+
+.auth-lead {
+  margin: 0 0 1rem;
+  color: #6a5844;
+  font-size: 0.95rem;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-bottom: 0.9rem;
+}
+
+.auth-tab {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 12px;
+  padding: 0.55rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.auth-tab.active {
+  background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+  border-color: transparent;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.auth-form label {
+  display: grid;
+  gap: 0.3rem;
+  font-weight: 600;
+}
+
+.auth-form input {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  background: #fff;
+}
+
+.auth-error {
+  margin: 0;
+  color: #8a1f1f;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+body.auth-open {
+  overflow: hidden;
+}
+
 .cart-chip {
   border: 1px solid rgba(42, 28, 14, 0.15);
   background: #fff8e8;
