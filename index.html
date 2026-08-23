@@ -12,447 +12,437 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <header class="site-header">
+<body class="tabs-layout">
+  <header class="site-header compact">
     <div class="wrap header-inner">
-      <a class="brand" href="#top">
+      <a class="brand" href="#home" data-tab-link="home">
         <img src="assets/logo.svg" alt="" width="40" height="40" />
         <span>
           <strong>الرباعية</strong>
           <small>AL RABAA</small>
         </span>
       </a>
-      <nav class="nav" aria-label="القائمة">
-        <a href="#why">لماذا الرباعية؟</a>
-        <a href="#products">المنتجات</a>
-        <a href="#packages">الباقات</a>
-        <a href="#services">الخدمات</a>
-        <a href="#kids">للصغار</a>
-        <a href="#start">كيف تبدأ</a>
-      </nav>
       <a class="btn btn-gold" href="https://wa.me/96599787742" target="_blank" rel="noopener">واتساب</a>
     </div>
   </header>
 
-  <a class="wa-float" href="https://wa.me/96599787742" target="_blank" rel="noopener" aria-label="تواصل عبر واتساب">
-    واتساب
-  </a>
+  <a class="wa-float" href="https://wa.me/96599787742" target="_blank" rel="noopener" aria-label="تواصل عبر واتساب">واتساب</a>
 
-  <main id="top">
-    <section class="hero">
-      <div class="hero-glow" aria-hidden="true"></div>
-      <div class="wrap hero-grid">
-        <div class="hero-copy">
-          <p class="eyebrow">Al Rabaa Apiaries</p>
-          <h1>الرباعية</h1>
-          <p class="subbrand">للنحل والعسل</p>
-          <p class="slogan">من الطبيعة .. لجودة تدوم</p>
-          <p class="lead">نوفر طرود نحل، ملكات، خلايا، معدات كاملة للمنحل، ومنتجات عسل طبيعية بجودة ممتازة.</p>
-          <p class="trust-line">طلبك يصل بتغليف آمن · توصيل داخل الكويت</p>
-          <div class="hero-actions">
-            <a class="btn btn-gold" href="https://wa.me/96599787742" target="_blank" rel="noopener">اطلب عبر واتساب</a>
-            <a class="btn btn-outline" href="#packages">شاهد الباقات</a>
+  <div class="app-shell wrap">
+    <aside class="side-tabs" aria-label="أقسام الموقع">
+      <button type="button" class="side-tab active" data-tab="home">الرئيسية</button>
+      <button type="button" class="side-tab" data-tab="why">لماذا الرباعية؟</button>
+      <button type="button" class="side-tab" data-tab="products">المنتجات</button>
+      <button type="button" class="side-tab" data-tab="packages">الباقات</button>
+      <button type="button" class="side-tab" data-tab="services">الخدمات</button>
+      <button type="button" class="side-tab" data-tab="kids">للصغار</button>
+      <button type="button" class="side-tab" data-tab="values">قيمنا</button>
+      <button type="button" class="side-tab" data-tab="start">كيف تبدأ</button>
+      <button type="button" class="side-tab" data-tab="contact">تواصل</button>
+    </aside>
+
+    <main class="tab-panels" id="top">
+      <section id="panel-home" class="tab-panel active" data-panel="home">
+        <div class="hero panel-hero">
+          <div class="hero-glow" aria-hidden="true"></div>
+          <div class="hero-grid">
+            <div class="hero-copy">
+              <p class="eyebrow">Al Rabaa Apiaries</p>
+              <h1>الرباعية</h1>
+              <p class="subbrand">للنحل والعسل</p>
+              <p class="slogan">من الطبيعة .. لجودة تدوم</p>
+              <p class="lead">نوفر طرود نحل، ملكات، خلايا، معدات كاملة للمنحل، ومنتجات عسل طبيعية بجودة ممتازة.</p>
+              <p class="trust-line">طلبك يصل بتغليف آمن · توصيل داخل الكويت</p>
+              <div class="hero-actions">
+                <a class="btn btn-gold" href="https://wa.me/96599787742" target="_blank" rel="noopener">اطلب عبر واتساب</a>
+                <button type="button" class="btn btn-outline" data-tab-link="packages">شاهد الباقات</button>
+              </div>
+            </div>
+            <div class="hero-mark">
+              <img src="assets/logo.svg" alt="شعار الرباعية للنحل والعسل" width="280" height="280" />
+            </div>
           </div>
         </div>
-        <div class="hero-mark">
-          <img src="assets/logo.svg" alt="شعار الرباعية للنحل والعسل" width="320" height="320" />
+        <div class="trust compact-trust">
+          <div class="trust-grid">
+            <article>
+              <span class="hex-icon" aria-hidden="true">✓</span>
+              <h3>منتجات طبيعية 100%</h3>
+              <p>من المنحل مباشرة إلى العميل</p>
+            </article>
+            <article>
+              <span class="hex-icon" aria-hidden="true">❀</span>
+              <h3>عناية من الخلية للعميل</h3>
+              <p>اهتمام بكل تفصيلة في الرحلة</p>
+            </article>
+            <article>
+              <span class="hex-icon" aria-hidden="true">▣</span>
+              <h3>تغليف آمن وتوصيل سريع</h3>
+              <p>طلبك يصل بتغليف آمن</p>
+            </article>
+            <article>
+              <span class="hex-icon" aria-hidden="true">★</span>
+              <h3>جودة مضمونة وثقة تدوم</h3>
+              <p>معايير ثابتة في كل طلب</p>
+            </article>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="trust">
-      <div class="wrap trust-grid">
-        <article>
-          <span class="hex-icon" aria-hidden="true">✓</span>
-          <h3>منتجات طبيعية 100%</h3>
-          <p>من المنحل مباشرة إلى العميل</p>
-        </article>
-        <article>
-          <span class="hex-icon" aria-hidden="true">❀</span>
-          <h3>عناية من الخلية للعميل</h3>
-          <p>اهتمام بكل تفصيلة في الرحلة</p>
-        </article>
-        <article>
-          <span class="hex-icon" aria-hidden="true">▣</span>
-          <h3>تغليف آمن وتوصيل سريع</h3>
-          <p>طلبك يصل بتغليف آمن</p>
-        </article>
-        <article>
-          <span class="hex-icon" aria-hidden="true">★</span>
-          <h3>جودة مضمونة وثقة تدوم</h3>
-          <p>معايير ثابتة في كل طلب</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="why" class="section why">
-      <div class="wrap why-grid">
-        <div class="why-media">
-          <img src="assets/products/real-apiary.jpg" alt="مناحل الرباعية" width="960" height="540" loading="lazy" />
-          <p class="photo-note">من المناحل مباشرة — استبدل لاحقًا بصوركم الحقيقية لرفع الثقة أكثر</p>
+      <section id="panel-why" class="tab-panel" data-panel="why">
+        <div class="panel-pad why">
+          <div class="why-grid">
+            <div class="why-media">
+              <img src="assets/products/real-apiary.jpg" alt="مناحل الرباعية" width="960" height="540" loading="lazy" />
+              <p class="photo-note">من المناحل مباشرة — استبدل لاحقًا بصوركم الحقيقية لرفع الثقة أكثر</p>
+            </div>
+            <div>
+              <div class="section-head">
+                <p class="eyebrow">الثقة</p>
+                <h2>لماذا الرباعية؟</h2>
+                <p>ثلاثة أسباب واضحة تختارنا من أجلها.</p>
+              </div>
+              <div class="why-points">
+                <article>
+                  <span class="why-num">1</span>
+                  <div>
+                    <h3>جودة</h3>
+                    <p>منتجات مختارة بعناية بمعايير ثابتة من الخلية حتى التسليم.</p>
+                  </div>
+                </article>
+                <article>
+                  <span class="why-num">2</span>
+                  <div>
+                    <h3>عناية</h3>
+                    <p>اهتمام بالتفاصيل في الطرود، التعبئة، والتغليف الآمن.</p>
+                  </div>
+                </article>
+                <article>
+                  <span class="why-num">3</span>
+                  <div>
+                    <h3>سرعة تواصل</h3>
+                    <p>طلبك عبر واتساب بسرعة، مع رد واضح ومتابعة مباشرة.</p>
+                  </div>
+                </article>
+              </div>
+              <div class="section-cta">
+                <a class="btn btn-gold" href="https://wa.me/96599787742" target="_blank" rel="noopener">تواصل الآن عبر واتساب</a>
+              </div>
+            </div>
+          </div>
         </div>
-        <div>
+      </section>
+
+      <section id="panel-products" class="tab-panel" data-panel="products">
+        <div class="panel-pad">
           <div class="section-head">
-            <p class="eyebrow">الثقة</p>
-            <h2>لماذا الرباعية؟</h2>
-            <p>ثلاثة أسباب واضحة تختارنا من أجلها.</p>
+            <p class="eyebrow">المنتجات</p>
+            <h2>المنتجات والأسعار</h2>
+            <p>صناديق، طرود، شمع، عسل، عكبر، إطارات، بدلات ومزيد — اطلب عبر واتساب.</p>
           </div>
-          <div class="why-points">
-            <article>
-              <span class="why-num">1</span>
-              <div>
-                <h3>جودة</h3>
-                <p>منتجات مختارة بعناية بمعايير ثابتة من الخلية حتى التسليم.</p>
-              </div>
+          <div class="product-grid">
+            <article class="product">
+              <div class="product-media"><img src="assets/products/hive-boxes.jpg" alt="صناديق تربية النحل" loading="lazy" width="600" height="450" /></div>
+              <h3>صناديق تربية النحل</h3>
+              <p>صناديق خشبية متينة للتربية والتوسعة.</p>
+              <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
+              <p class="price"><span>18</span> د.ك</p>
+              <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%B5%D9%86%D8%A7%D8%AF%D9%8A%D9%82%20%D8%AA%D8%B1%D8%A8%D9%8A%D8%A9%20%D9%86%D8%AD%D9%84" target="_blank" rel="noopener">اطلب الآن</a>
             </article>
-            <article>
-              <span class="why-num">2</span>
-              <div>
-                <h3>عناية</h3>
-                <p>اهتمام بالتفاصيل في الطرود، التعبئة، والتغليف الآمن.</p>
-              </div>
+            <article class="product">
+              <div class="product-media"><img src="assets/products/bee-package.jpg" alt="طرد نحل" loading="lazy" width="600" height="450" /></div>
+              <h3>طرد نحل</h3>
+              <p>طرد جاهز للبداية أو التوسعة مع شغالات نشطة.</p>
+              <p class="stock">حسب الطلب · توصيل داخل الكويت</p>
+              <p class="price"><span>25</span> د.ك</p>
+              <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%B7%D8%B1%D8%AF%20%D9%86%D8%AD%D9%84" target="_blank" rel="noopener">اطلب الآن</a>
             </article>
-            <article>
-              <span class="why-num">3</span>
-              <div>
-                <h3>سرعة تواصل</h3>
-                <p>طلبك عبر واتساب بسرعة، مع رد واضح ومتابعة مباشرة.</p>
-              </div>
+            <article class="product">
+              <div class="product-media"><img src="assets/products/queen.jpg" alt="ملكة ملقحة" loading="lazy" width="600" height="450" /></div>
+              <h3>ملكة ملقحة</h3>
+              <p>ملكات مختارة لتحسين قوة الطائفة والإنتاج.</p>
+              <p class="stock">حسب الطلب · توصيل داخل الكويت</p>
+              <p class="price"><span>12</span> د.ك</p>
+              <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D9%85%D9%84%D9%83%D8%A9%20%D9%85%D9%84%D9%82%D8%AD%D8%A9" target="_blank" rel="noopener">اطلب الآن</a>
+            </article>
+            <article class="product">
+              <div class="product-media"><img src="assets/products/honey.jpg" alt="عسل طبيعي" loading="lazy" width="600" height="450" /></div>
+              <h3>عسل طبيعي</h3>
+              <p>عسل صافٍ من المناحل بجودة الرباعية.</p>
+              <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
+              <p class="price"><span>8</span> د.ك</p>
+              <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%B9%D8%B3%D9%84%20%D8%B7%D8%A8%D9%8A%D8%B9%D9%8A" target="_blank" rel="noopener">اطلب الآن</a>
+            </article>
+            <article class="product">
+              <div class="product-media"><img src="assets/products/beeswax.jpg" alt="شمع النحل" loading="lazy" width="600" height="450" /></div>
+              <h3>شمع النحل</h3>
+              <p>شمع أساس وقوالب طبيعية للمناحل والتعبئة.</p>
+              <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
+              <p class="price"><span>6</span> د.ك</p>
+              <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%B4%D9%85%D8%B9%20%D9%86%D8%AD%D9%84" target="_blank" rel="noopener">اطلب الآن</a>
+            </article>
+            <article class="product">
+              <div class="product-media"><img src="assets/products/propolis.jpg" alt="العكبر" loading="lazy" width="600" height="450" /></div>
+              <h3>العكبر (البروبوليس)</h3>
+              <p>عكبر خام بجودة عالية للاستخدام الطبيعي.</p>
+              <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
+              <p class="price"><span>10</span> د.ك</p>
+              <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%B9%D9%83%D8%A8%D8%B1" target="_blank" rel="noopener">اطلب الآن</a>
+            </article>
+            <article class="product">
+              <div class="product-media"><img src="assets/products/frames.jpg" alt="إطارات إضافية" loading="lazy" width="600" height="450" /></div>
+              <h3>إطارات إضافية</h3>
+              <p>إطارات خشبية مع شمع أساس جاهزة للتركيب.</p>
+              <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
+              <p class="price"><span>1.5</span> د.ك</p>
+              <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%A5%D8%B7%D8%A7%D8%B1%D8%A7%D8%AA%20%D8%A5%D8%B6%D8%A7%D9%81%D9%8A%D8%A9" target="_blank" rel="noopener">اطلب الآن</a>
+            </article>
+            <article class="product">
+              <div class="product-media"><img src="assets/products/beekeeper-suit.jpg" alt="بدلة النحال" loading="lazy" width="600" height="450" /></div>
+              <h3>بدلة النحال</h3>
+              <p>بدلة وقاية كاملة مع قناع وقفازات.</p>
+              <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
+              <p class="price"><span>22</span> د.ك</p>
+              <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%A8%D8%AF%D9%84%D8%A9%20%D9%86%D8%AD%D8%A7%D9%84" target="_blank" rel="noopener">اطلب الآن</a>
+            </article>
+            <article class="product">
+              <div class="product-media"><img src="assets/products/smoker.jpg" alt="مدخن النحل" loading="lazy" width="600" height="450" /></div>
+              <h3>مدخن النحل</h3>
+              <p>مدخن معدني عملي لفحص الطوائف بأمان.</p>
+              <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
+              <p class="price"><span>9</span> د.ك</p>
+              <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D9%85%D8%AF%D8%AE%D9%86%20%D9%86%D8%AD%D9%84" target="_blank" rel="noopener">اطلب الآن</a>
             </article>
           </div>
           <div class="section-cta">
-            <a class="btn btn-gold" href="https://wa.me/96599787742" target="_blank" rel="noopener">تواصل الآن عبر واتساب</a>
+            <p class="trust-line dark">طلبك يصل بتغليف آمن</p>
+            <a class="btn btn-gold" href="https://wa.me/96599787742" target="_blank" rel="noopener">اطلب عبر واتساب</a>
           </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section id="products" class="section">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">المنتجات</p>
-          <h2>المنتجات والأسعار</h2>
-          <p>صناديق، طرود، شمع، عسل، عكبر، إطارات، بدلات ومزيد — اطلب عبر واتساب.</p>
-        </div>
-        <div class="product-grid">
-          <article class="product">
-            <div class="product-media">
-              <img src="assets/products/hive-boxes.jpg" alt="صناديق تربية النحل" loading="lazy" width="600" height="450" />
-            </div>
-            <h3>صناديق تربية النحل</h3>
-            <p>صناديق خشبية متينة للتربية والتوسعة.</p>
-            <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
-            <p class="price"><span>18</span> د.ك</p>
-            <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%B5%D9%86%D8%A7%D8%AF%D9%8A%D9%82%20%D8%AA%D8%B1%D8%A8%D9%8A%D8%A9%20%D9%86%D8%AD%D9%84" target="_blank" rel="noopener">اطلب الآن</a>
-          </article>
-          <article class="product">
-            <div class="product-media">
-              <img src="assets/products/bee-package.jpg" alt="طرد نحل" loading="lazy" width="600" height="450" />
-            </div>
-            <h3>طرد نحل</h3>
-            <p>طرد جاهز للبداية أو التوسعة مع شغالات نشطة.</p>
-            <p class="stock">حسب الطلب · توصيل داخل الكويت</p>
-            <p class="price"><span>25</span> د.ك</p>
-            <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%B7%D8%B1%D8%AF%20%D9%86%D8%AD%D9%84" target="_blank" rel="noopener">اطلب الآن</a>
-          </article>
-          <article class="product">
-            <div class="product-media">
-              <img src="assets/products/queen.jpg" alt="ملكة ملقحة" loading="lazy" width="600" height="450" />
-            </div>
-            <h3>ملكة ملقحة</h3>
-            <p>ملكات مختارة لتحسين قوة الطائفة والإنتاج.</p>
-            <p class="stock">حسب الطلب · توصيل داخل الكويت</p>
-            <p class="price"><span>12</span> د.ك</p>
-            <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D9%85%D9%84%D9%83%D8%A9%20%D9%85%D9%84%D9%82%D8%AD%D8%A9" target="_blank" rel="noopener">اطلب الآن</a>
-          </article>
-          <article class="product">
-            <div class="product-media">
-              <img src="assets/products/honey.jpg" alt="عسل طبيعي" loading="lazy" width="600" height="450" />
-            </div>
-            <h3>عسل طبيعي</h3>
-            <p>عسل صافٍ من المناحل بجودة الرباعية.</p>
-            <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
-            <p class="price"><span>8</span> د.ك</p>
-            <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%B9%D8%B3%D9%84%20%D8%B7%D8%A8%D9%8A%D8%B9%D9%8A" target="_blank" rel="noopener">اطلب الآن</a>
-          </article>
-          <article class="product">
-            <div class="product-media">
-              <img src="assets/products/beeswax.jpg" alt="شمع النحل" loading="lazy" width="600" height="450" />
-            </div>
-            <h3>شمع النحل</h3>
-            <p>شمع أساس وقوالب طبيعية للمناحل والتعبئة.</p>
-            <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
-            <p class="price"><span>6</span> د.ك</p>
-            <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%B4%D9%85%D8%B9%20%D9%86%D8%AD%D9%84" target="_blank" rel="noopener">اطلب الآن</a>
-          </article>
-          <article class="product">
-            <div class="product-media">
-              <img src="assets/products/propolis.jpg" alt="العكبر" loading="lazy" width="600" height="450" />
-            </div>
-            <h3>العكبر (البروبوليس)</h3>
-            <p>عكبر خام بجودة عالية للاستخدام الطبيعي.</p>
-            <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
-            <p class="price"><span>10</span> د.ك</p>
-            <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%B9%D9%83%D8%A8%D8%B1" target="_blank" rel="noopener">اطلب الآن</a>
-          </article>
-          <article class="product">
-            <div class="product-media">
-              <img src="assets/products/frames.jpg" alt="إطارات إضافية" loading="lazy" width="600" height="450" />
-            </div>
-            <h3>إطارات إضافية</h3>
-            <p>إطارات خشبية مع شمع أساس جاهزة للتركيب.</p>
-            <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
-            <p class="price"><span>1.5</span> د.ك</p>
-            <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%A5%D8%B7%D8%A7%D8%B1%D8%A7%D8%AA%20%D8%A5%D8%B6%D8%A7%D9%81%D9%8A%D8%A9" target="_blank" rel="noopener">اطلب الآن</a>
-          </article>
-          <article class="product">
-            <div class="product-media">
-              <img src="assets/products/beekeeper-suit.jpg" alt="بدلة النحال" loading="lazy" width="600" height="450" />
-            </div>
-            <h3>بدلة النحال</h3>
-            <p>بدلة وقاية كاملة مع قناع وقفازات.</p>
-            <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
-            <p class="price"><span>22</span> د.ك</p>
-            <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D8%A8%D8%AF%D9%84%D8%A9%20%D9%86%D8%AD%D8%A7%D9%84" target="_blank" rel="noopener">اطلب الآن</a>
-          </article>
-          <article class="product">
-            <div class="product-media">
-              <img src="assets/products/smoker.jpg" alt="مدخن النحل" loading="lazy" width="600" height="450" />
-            </div>
-            <h3>مدخن النحل</h3>
-            <p>مدخن معدني عملي لفحص الطوائف بأمان.</p>
-            <p class="stock">متوفر الآن · توصيل داخل الكويت</p>
-            <p class="price"><span>9</span> د.ك</p>
-            <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%B7%D9%84%D8%A8%20%D9%85%D8%AF%D8%AE%D9%86%20%D9%86%D8%AD%D9%84" target="_blank" rel="noopener">اطلب الآن</a>
-          </article>
-        </div>
-        <div class="section-cta">
-          <p class="trust-line dark">طلبك يصل بتغليف آمن</p>
-          <a class="btn btn-gold" href="https://wa.me/96599787742" target="_blank" rel="noopener">اطلب عبر واتساب</a>
-        </div>
-      </div>
-    </section>
-
-    <section id="packages" class="section section-dark">
-      <div class="wrap">
-        <div class="section-head light">
-          <p class="eyebrow">الباقات</p>
-          <h2>الباقات الجاهزة</h2>
-          <p>مجموعات مرتبة حسب هدفك: بداية، توسعة، أو هدايا العسل.</p>
-        </div>
-        <div class="package-grid">
-          <article>
-            <h3>باقة المبتدئ</h3>
-            <p>خلية + طرد نحل + بدلة + مدخن.</p>
-            <p class="stock light">متوفر الآن · توصيل داخل الكويت</p>
-            <p class="price light"><span>65</span> د.ك</p>
-            <a class="btn btn-gold" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D9%85%D8%A8%D8%AA%D8%AF%D8%A6" target="_blank" rel="noopener">اطلب الباقة</a>
-          </article>
-          <article>
-            <h3>باقة التوسعة</h3>
-            <p>خليتان + ملكة + إطارات إضافية.</p>
-            <p class="stock light">حسب الطلب · توصيل داخل الكويت</p>
-            <p class="price light"><span>55</span> د.ك</p>
-            <a class="btn btn-gold" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D8%AA%D9%88%D8%B3%D8%B9%D8%A9" target="_blank" rel="noopener">اطلب الباقة</a>
-          </article>
-          <article>
-            <h3>باقة العسل</h3>
-            <p>عسل طبيعي + شمع + عبوات هدايا.</p>
-            <p class="stock light">متوفر الآن · توصيل داخل الكويت</p>
-            <p class="price light"><span>20</span> د.ك</p>
-            <a class="btn btn-gold" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D8%B9%D8%B3%D9%84" target="_blank" rel="noopener">اطلب الباقة</a>
-          </article>
-        </div>
-        <div class="section-cta">
-          <a class="btn btn-outline" href="https://wa.me/96599787742" target="_blank" rel="noopener">اسأل عن باقة مخصصة</a>
-        </div>
-      </div>
-    </section>
-
-    <section id="services" class="section">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">الخدمات</p>
-          <h2>الإشراف على الخلايا والفرز</h2>
-          <p>أسعار شهرية للإشراف، وأسعار فرز حسب عدد الخلايا — احسب تكلفتك فورًا.</p>
-        </div>
-
-        <div class="services-grid">
-          <article class="service-card">
-            <h3>الإشراف على الخلايا</h3>
-            <p class="service-note">اشتراك شهري حسب عدد الخلايا</p>
-            <div class="price-table">
-              <div><span>من 1 إلى 5 خلايا</span><strong>15 د.ك / شهر</strong></div>
-              <div><span>من 5 إلى 10 خلايا</span><strong>20 د.ك / شهر</strong></div>
-              <div><span>من 10 إلى 15 خلية</span><strong>25 د.ك / شهر</strong></div>
-              <div><span>من 15 إلى 20 خلية</span><strong>30 د.ك / شهر</strong></div>
-              <div><span>أي خلية فوق 20</span><strong>+1 د.ك / شهر لكل خلية زيادة</strong></div>
-            </div>
-          </article>
-
-          <article class="service-card">
-            <h3>الفرز</h3>
-            <p class="service-note">السعر للخلية الواحدة حسب الباقة</p>
-            <div class="price-table">
-              <div><span>من 1 إلى 5 خلايا</span><strong>5 د.ك / خلية</strong></div>
-              <div><span>من 5 إلى 10 خلايا</span><strong>4.5 د.ك / خلية</strong></div>
-              <div><span>من 10 إلى 15 خلية</span><strong>3 د.ك / خلية</strong></div>
-              <div><span>من 15 إلى 20 خلية</span><strong>2.750 د.ك / خلية</strong></div>
-              <div><span>أي خلية فوق باقة الـ 20</span><strong>2.5 د.ك / خلية زيادة</strong></div>
-            </div>
-          </article>
-        </div>
-
-        <div class="calc-card">
-          <h3>حاسبة الخدمات</h3>
-          <p>أدخل عدد الخلايا لمعرفة تكلفة الإشراف الشهري وتكلفة الفرز.</p>
-          <label class="calc-label">
-            عدد الخلايا
-            <input type="number" id="svc-hives" min="1" step="1" value="5" />
-          </label>
-          <div class="calc-results">
+      <section id="panel-packages" class="tab-panel" data-panel="packages">
+        <div class="panel-pad section-dark packages-panel">
+          <div class="section-head light">
+            <p class="eyebrow">الباقات</p>
+            <h2>الباقات الجاهزة</h2>
+            <p>مجموعات مرتبة حسب هدفك: بداية، توسعة، أو هدايا العسل.</p>
+          </div>
+          <div class="package-grid">
             <article>
-              <h4>الإشراف الشهري</h4>
-              <p class="calc-price"><span id="sup-total">15</span> د.ك</p>
-              <p class="calc-meta" id="sup-meta">باقة 1–5 خلايا</p>
+              <h3>باقة المبتدئ</h3>
+              <p>خلية + طرد نحل + بدلة + مدخن.</p>
+              <p class="stock light">متوفر الآن · توصيل داخل الكويت</p>
+              <p class="price light"><span>65</span> د.ك</p>
+              <a class="btn btn-gold" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D9%85%D8%A8%D8%AA%D8%AF%D8%A6" target="_blank" rel="noopener">اطلب الباقة</a>
             </article>
             <article>
-              <h4>تكلفة الفرز</h4>
-              <p class="calc-price"><span id="ext-total">25</span> د.ك</p>
-              <p class="calc-meta" id="ext-meta">5 × 5 د.ك</p>
+              <h3>باقة التوسعة</h3>
+              <p>خليتان + ملكة + إطارات إضافية.</p>
+              <p class="stock light">حسب الطلب · توصيل داخل الكويت</p>
+              <p class="price light"><span>55</span> د.ك</p>
+              <a class="btn btn-gold" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D8%AA%D9%88%D8%B3%D8%B9%D8%A9" target="_blank" rel="noopener">اطلب الباقة</a>
+            </article>
+            <article>
+              <h3>باقة العسل</h3>
+              <p>عسل طبيعي + شمع + عبوات هدايا.</p>
+              <p class="stock light">متوفر الآن · توصيل داخل الكويت</p>
+              <p class="price light"><span>20</span> د.ك</p>
+              <a class="btn btn-gold" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%A8%D8%A7%D9%82%D8%A9%20%D8%A7%D9%84%D8%B9%D8%B3%D9%84" target="_blank" rel="noopener">اطلب الباقة</a>
             </article>
           </div>
-          <a class="btn btn-gold" id="svc-wa" href="https://wa.me/96599787742" target="_blank" rel="noopener">اطلب الخدمة عبر واتساب</a>
+          <div class="section-cta">
+            <a class="btn btn-outline" href="https://wa.me/96599787742" target="_blank" rel="noopener">اسأل عن باقة مخصصة</a>
+          </div>
         </div>
+      </section>
 
-        <div class="section-cta">
-          <p class="trust-line dark">طلبك يصل بتغليف آمن</p>
-          <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%AE%D8%AF%D9%85%D8%A9%20%D8%A7%D9%84%D8%A5%D8%B4%D8%B1%D8%A7%D9%81%20%D8%A3%D9%88%20%D8%A7%D9%84%D9%81%D8%B1%D8%B2" target="_blank" rel="noopener">تواصل للخدمات</a>
-        </div>
-      </div>
-    </section>
-
-    <section id="kids" class="section kids">
-      <div class="wrap kids-grid">
-        <div class="kids-media">
-          <img src="assets/products/kids-bees.jpg" alt="عالم النحل للصغار" width="960" height="540" loading="lazy" />
-        </div>
-        <div class="kids-copy">
-          <p class="eyebrow">للصغار</p>
-          <h2>عالم النحل للأطفال</h2>
-          <p>ركن تعليمي ممتع يقرّب الصغار من عالم النحل والعسل بطريقة آمنة وبسيطة.</p>
-          <ul class="kids-facts">
-            <li><strong>هل تعلم؟</strong> النحلة تزور مئات الأزهار في اليوم الواحد.</li>
-            <li><strong>العسل:</strong> طعام طبيعي حلو يصنعه النحل من رحيق الأزهار.</li>
-            <li><strong>الخلية:</strong> بيت النحل مرتب مثل مدينة صغيرة متعاونة.</li>
-          </ul>
-          <div class="kids-cards">
-            <article>
-              <h3>قصة النحلة الصغيرة</h3>
-              <p>نشارك الأطفال قصة مبسطة عن رحلة النحلة من الزهرة إلى العسل.</p>
+      <section id="panel-services" class="tab-panel" data-panel="services">
+        <div class="panel-pad">
+          <div class="section-head">
+            <p class="eyebrow">الخدمات</p>
+            <h2>الإشراف على الخلايا والفرز</h2>
+            <p>أسعار شهرية للإشراف، وأسعار فرز حسب عدد الخلايا — احسب تكلفتك فورًا.</p>
+          </div>
+          <div class="services-grid">
+            <article class="service-card">
+              <h3>الإشراف على الخلايا</h3>
+              <p class="service-note">اشتراك شهري حسب عدد الخلايا</p>
+              <div class="price-table">
+                <div><span>من 1 إلى 5 خلايا</span><strong>15 د.ك / شهر</strong></div>
+                <div><span>من 5 إلى 10 خلايا</span><strong>20 د.ك / شهر</strong></div>
+                <div><span>من 10 إلى 15 خلية</span><strong>25 د.ك / شهر</strong></div>
+                <div><span>من 15 إلى 20 خلية</span><strong>30 د.ك / شهر</strong></div>
+                <div><span>أي خلية فوق 20</span><strong>+1 د.ك / شهر لكل خلية زيادة</strong></div>
+              </div>
             </article>
-            <article>
-              <h3>ورشة آمنة مع الأهل</h3>
-              <p>أنشطة مشاهدة وتعرّف على الأدوات من بعيد — بدون اقتراب من الطوائف.</p>
-            </article>
-            <article>
-              <h3>هدية عسل للصغار</h3>
-              <p>عبوات عسل صغيرة مناسبة كهدية تعليمية مع إشراف الأهل.</p>
+            <article class="service-card">
+              <h3>الفرز</h3>
+              <p class="service-note">السعر للخلية الواحدة حسب الباقة</p>
+              <div class="price-table">
+                <div><span>من 1 إلى 5 خلايا</span><strong>5 د.ك / خلية</strong></div>
+                <div><span>من 5 إلى 10 خلايا</span><strong>4.5 د.ك / خلية</strong></div>
+                <div><span>من 10 إلى 15 خلية</span><strong>3 د.ك / خلية</strong></div>
+                <div><span>من 15 إلى 20 خلية</span><strong>2.750 د.ك / خلية</strong></div>
+                <div><span>أي خلية فوق باقة الـ 20</span><strong>2.5 د.ك / خلية زيادة</strong></div>
+              </div>
             </article>
           </div>
-          <a class="btn btn-gold" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D9%85%D8%B9%D9%84%D9%88%D9%85%D8%A7%D8%AA%20%D8%B9%D9%86%20%D9%82%D8%B3%D9%85%20%D8%A7%D9%84%D8%B5%D8%BA%D8%A7%D8%B1" target="_blank" rel="noopener">اسأل عن ركن الصغار</a>
+          <div class="calc-card">
+            <h3>حاسبة الخدمات</h3>
+            <p>أدخل عدد الخلايا لمعرفة تكلفة الإشراف الشهري وتكلفة الفرز.</p>
+            <label class="calc-label">
+              عدد الخلايا
+              <input type="number" id="svc-hives" min="1" step="1" value="5" />
+            </label>
+            <div class="calc-results">
+              <article>
+                <h4>الإشراف الشهري</h4>
+                <p class="calc-price"><span id="sup-total">15</span> د.ك</p>
+                <p class="calc-meta" id="sup-meta">باقة 1–5 خلايا</p>
+              </article>
+              <article>
+                <h4>تكلفة الفرز</h4>
+                <p class="calc-price"><span id="ext-total">25</span> د.ك</p>
+                <p class="calc-meta" id="ext-meta">5 × 5 د.ك</p>
+              </article>
+            </div>
+            <a class="btn btn-gold" id="svc-wa" href="https://wa.me/96599787742" target="_blank" rel="noopener">اطلب الخدمة عبر واتساب</a>
+          </div>
+          <div class="section-cta">
+            <p class="trust-line dark">طلبك يصل بتغليف آمن</p>
+            <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%AE%D8%AF%D9%85%D8%A9%20%D8%A7%D9%84%D8%A5%D8%B4%D8%B1%D8%A7%D9%81%20%D8%A3%D9%88%20%D8%A7%D9%84%D9%81%D8%B1%D8%B2" target="_blank" rel="noopener">تواصل للخدمات</a>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section id="values" class="section">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">الهوية</p>
-          <h2>قيم الرباعية</h2>
-          <p>الشكل السداسي يرمز إلى التعاون والتكامل بين أربعة شركاء في صناعة العسل.</p>
+      <section id="panel-kids" class="tab-panel" data-panel="kids">
+        <div class="panel-pad kids">
+          <div class="kids-grid">
+            <div class="kids-media">
+              <img src="assets/products/kids-bees.jpg" alt="عالم النحل للصغار" width="960" height="540" loading="lazy" />
+            </div>
+            <div class="kids-copy">
+              <p class="eyebrow">للصغار</p>
+              <h2>عالم النحل للأطفال</h2>
+              <p>ركن تعليمي ممتع يقرّب الصغار من عالم النحل والعسل بطريقة آمنة وبسيطة.</p>
+              <ul class="kids-facts">
+                <li><strong>هل تعلم؟</strong> النحلة تزور مئات الأزهار في اليوم الواحد.</li>
+                <li><strong>العسل:</strong> طعام طبيعي حلو يصنعه النحل من رحيق الأزهار.</li>
+                <li><strong>الخلية:</strong> بيت النحل مرتب مثل مدينة صغيرة متعاونة.</li>
+              </ul>
+              <div class="kids-cards">
+                <article>
+                  <h3>قصة النحلة الصغيرة</h3>
+                  <p>نشارك الأطفال قصة مبسطة عن رحلة النحلة من الزهرة إلى العسل.</p>
+                </article>
+                <article>
+                  <h3>ورشة آمنة مع الأهل</h3>
+                  <p>أنشطة مشاهدة وتعرّف على الأدوات من بعيد — بدون اقتراب من الطوائف.</p>
+                </article>
+                <article>
+                  <h3>هدية عسل للصغار</h3>
+                  <p>عبوات عسل صغيرة مناسبة كهدية تعليمية مع إشراف الأهل.</p>
+                </article>
+              </div>
+              <a class="btn btn-gold" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D9%85%D8%B9%D9%84%D9%88%D9%85%D8%A7%D8%AA%20%D8%B9%D9%86%20%D9%82%D8%B3%D9%85%20%D8%A7%D9%84%D8%B5%D8%BA%D8%A7%D8%B1" target="_blank" rel="noopener">اسأل عن ركن الصغار</a>
+            </div>
+          </div>
         </div>
-        <div class="values-grid">
-          <article>
-            <div class="value-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 40" width="28" height="28"><ellipse cx="20" cy="22" rx="8" ry="11" fill="#1A1208"/><path d="M14 18h12M13 23h14M14 28h12" stroke="#C9A227" stroke-width="2"/><circle cx="16" cy="12" r="3" fill="#1A1208"/><circle cx="24" cy="12" r="3" fill="#1A1208"/></svg>
-            </div>
-            <h3>الاهتمام بالتفاصيل</h3>
-            <p>عناية بكل تفصيلة</p>
-          </article>
-          <article>
-            <div class="value-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 40" width="28" height="28"><path d="M12 18c0-4 3-7 8-7s8 3 8 7v2H12v-2z" fill="none" stroke="#C9A227" stroke-width="2"/><path d="M10 22h20v4c0 4-4 7-10 7s-10-3-10-7v-4z" fill="#1A1208"/><path d="M8 20h8M24 20h8" stroke="#C9A227" stroke-width="2" stroke-linecap="round"/></svg>
-            </div>
-            <h3>التعاون</h3>
-            <p>سر نجاحنا</p>
-          </article>
-          <article>
-            <div class="value-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 40" width="28" height="28"><polygon points="20,6 30,12 30,24 20,30 10,24 10,12" fill="none" stroke="#C9A227" stroke-width="2"/><polygon points="20,12 26,16 26,22 20,26 14,22 14,16" fill="#1A1208"/></svg>
-            </div>
-            <h3>الطبيعة مصدرنا</h3>
-            <p>من الطبيعة نبدأ</p>
-          </article>
-          <article>
-            <div class="value-icon" aria-hidden="true">
-              <svg viewBox="0 0 40 40" width="28" height="28"><circle cx="20" cy="20" r="12" fill="none" stroke="#C9A227" stroke-width="2"/><path d="M14 20l4 4 8-9" fill="none" stroke="#1A1208" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </div>
-            <h3>الجودة أولاً</h3>
-            <p>جودة لا تُساوم</p>
-          </article>
-        </div>
-        <div class="section-cta">
-          <a class="btn btn-dark" href="https://wa.me/96599787742" target="_blank" rel="noopener">تواصل عبر واتساب</a>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section id="start" class="section section-soft">
-      <div class="wrap">
-        <div class="section-head">
-          <p class="eyebrow">دليل سريع</p>
-          <h2>كيف تبدأ تربية النحل؟</h2>
-          <p>ثلاث خطوات واضحة قبل أن تبدأ مشروعك.</p>
+      <section id="panel-values" class="tab-panel" data-panel="values">
+        <div class="panel-pad">
+          <div class="section-head">
+            <p class="eyebrow">الهوية</p>
+            <h2>قيم الرباعية</h2>
+            <p>الشكل السداسي يرمز إلى التعاون والتكامل بين أربعة شركاء في صناعة العسل.</p>
+          </div>
+          <div class="values-grid">
+            <article>
+              <div class="value-icon" aria-hidden="true">
+                <svg viewBox="0 0 40 40" width="28" height="28"><ellipse cx="20" cy="22" rx="8" ry="11" fill="#1A1208"/><path d="M14 18h12M13 23h14M14 28h12" stroke="#C9A227" stroke-width="2"/><circle cx="16" cy="12" r="3" fill="#1A1208"/><circle cx="24" cy="12" r="3" fill="#1A1208"/></svg>
+              </div>
+              <h3>الاهتمام بالتفاصيل</h3>
+              <p>عناية بكل تفصيلة</p>
+            </article>
+            <article>
+              <div class="value-icon" aria-hidden="true">
+                <svg viewBox="0 0 40 40" width="28" height="28"><path d="M12 18c0-4 3-7 8-7s8 3 8 7v2H12v-2z" fill="none" stroke="#C9A227" stroke-width="2"/><path d="M10 22h20v4c0 4-4 7-10 7s-10-3-10-7v-4z" fill="#1A1208"/><path d="M8 20h8M24 20h8" stroke="#C9A227" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <h3>التعاون</h3>
+              <p>سر نجاحنا</p>
+            </article>
+            <article>
+              <div class="value-icon" aria-hidden="true">
+                <svg viewBox="0 0 40 40" width="28" height="28"><polygon points="20,6 30,12 30,24 20,30 10,24 10,12" fill="none" stroke="#C9A227" stroke-width="2"/><polygon points="20,12 26,16 26,22 20,26 14,22 14,16" fill="#1A1208"/></svg>
+              </div>
+              <h3>الطبيعة مصدرنا</h3>
+              <p>من الطبيعة نبدأ</p>
+            </article>
+            <article>
+              <div class="value-icon" aria-hidden="true">
+                <svg viewBox="0 0 40 40" width="28" height="28"><circle cx="20" cy="20" r="12" fill="none" stroke="#C9A227" stroke-width="2"/><path d="M14 20l4 4 8-9" fill="none" stroke="#1A1208" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <h3>الجودة أولاً</h3>
+              <p>جودة لا تُساوم</p>
+            </article>
+          </div>
+          <div class="section-cta">
+            <a class="btn btn-dark" href="https://wa.me/96599787742" target="_blank" rel="noopener">تواصل عبر واتساب</a>
+          </div>
         </div>
-        <div class="start-grid">
-          <article class="start-card">
-            <div class="start-icon" aria-hidden="true">
-              <svg viewBox="0 0 48 48" width="32" height="32"><path d="M8 34c6-10 12-16 16-16s10 6 16 16" fill="none" stroke="#C9A227" stroke-width="2.5"/><path d="M14 34h20" stroke="#1A1208" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="14" r="5" fill="#1A1208"/><path d="M18 18c-4 2-6 6-6 10M30 18c4 2 6 6 6 10" fill="none" stroke="#C9A227" stroke-width="2"/></svg>
-            </div>
-            <h3>المكان</h3>
-            <p>اختر موقعًا فيه تهوية وماء وظل جزئي.</p>
-          </article>
-          <article class="start-card">
-            <div class="start-icon" aria-hidden="true">
-              <svg viewBox="0 0 48 48" width="32" height="32"><rect x="10" y="14" width="28" height="8" rx="2" fill="#1A1208"/><rect x="12" y="22" width="24" height="8" rx="2" fill="#C9A227"/><rect x="14" y="30" width="20" height="8" rx="2" fill="#1A1208"/></svg>
-            </div>
-            <h3>الخلية والطرد</h3>
-            <p>اشترِ خلية جيدة وطردًا قويًا أو نواة جاهزة.</p>
-          </article>
-          <article class="start-card">
-            <div class="start-icon" aria-hidden="true">
-              <svg viewBox="0 0 48 48" width="32" height="32"><circle cx="24" cy="24" r="14" fill="none" stroke="#C9A227" stroke-width="2.5"/><path d="M24 14v10l7 4" fill="none" stroke="#1A1208" stroke-width="2.5" stroke-linecap="round"/></svg>
-            </div>
-            <h3>المتابعة</h3>
-            <p>التزم بالفحص الدوري والتغذية عند الحاجة.</p>
-          </article>
-        </div>
-        <div class="section-cta">
-          <a class="btn btn-gold" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9%20%D9%84%D8%A8%D8%AF%D8%A1%20%D8%AA%D8%B1%D8%A8%D9%8A%D8%A9%20%D8%A7%D9%84%D9%86%D8%AD%D9%84" target="_blank" rel="noopener">اطلب استشارة البداية</a>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="cta">
-      <div class="wrap cta-box">
-        <img src="assets/logo.svg" alt="" width="72" height="72" />
-        <h2>ابدأ مشروعك في النحل اليوم</h2>
-        <p>تواصل معنا لطلب المنتجات أو تخصيص باقة تناسب منحلَك. طلبك يصل بتغليف آمن.</p>
-        <a class="btn btn-gold btn-lg" href="https://wa.me/96599787742" target="_blank" rel="noopener">تواصل الآن</a>
-      </div>
-    </section>
-  </main>
+      <section id="panel-start" class="tab-panel" data-panel="start">
+        <div class="panel-pad">
+          <div class="section-head">
+            <p class="eyebrow">دليل سريع</p>
+            <h2>كيف تبدأ تربية النحل؟</h2>
+            <p>ثلاث خطوات واضحة قبل أن تبدأ مشروعك.</p>
+          </div>
+          <div class="start-grid">
+            <article class="start-card">
+              <div class="start-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" width="32" height="32"><path d="M8 34c6-10 12-16 16-16s10 6 16 16" fill="none" stroke="#C9A227" stroke-width="2.5"/><path d="M14 34h20" stroke="#1A1208" stroke-width="2.5" stroke-linecap="round"/><circle cx="24" cy="14" r="5" fill="#1A1208"/><path d="M18 18c-4 2-6 6-6 10M30 18c4 2 6 6 6 10" fill="none" stroke="#C9A227" stroke-width="2"/></svg>
+              </div>
+              <h3>المكان</h3>
+              <p>اختر موقعًا فيه تهوية وماء وظل جزئي.</p>
+            </article>
+            <article class="start-card">
+              <div class="start-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" width="32" height="32"><rect x="10" y="14" width="28" height="8" rx="2" fill="#1A1208"/><rect x="12" y="22" width="24" height="8" rx="2" fill="#C9A227"/><rect x="14" y="30" width="20" height="8" rx="2" fill="#1A1208"/></svg>
+              </div>
+              <h3>الخلية والطرد</h3>
+              <p>اشترِ خلية جيدة وطردًا قويًا أو نواة جاهزة.</p>
+            </article>
+            <article class="start-card">
+              <div class="start-icon" aria-hidden="true">
+                <svg viewBox="0 0 48 48" width="32" height="32"><circle cx="24" cy="24" r="14" fill="none" stroke="#C9A227" stroke-width="2.5"/><path d="M24 14v10l7 4" fill="none" stroke="#1A1208" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </div>
+              <h3>المتابعة</h3>
+              <p>التزم بالفحص الدوري والتغذية عند الحاجة.</p>
+            </article>
+          </div>
+          <div class="section-cta">
+            <a class="btn btn-gold" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D9%85%D8%B3%D8%A7%D8%B9%D8%AF%D8%A9%20%D9%84%D8%A8%D8%AF%D8%A1%20%D8%AA%D8%B1%D8%A8%D9%8A%D8%A9%20%D8%A7%D9%84%D9%86%D8%AD%D9%84" target="_blank" rel="noopener">اطلب استشارة البداية</a>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-contact" class="tab-panel" data-panel="contact">
+        <div class="panel-pad">
+          <div class="cta-box">
+            <img src="assets/logo.svg" alt="" width="72" height="72" />
+            <h2>ابدأ مشروعك في النحل اليوم</h2>
+            <p>تواصل معنا لطلب المنتجات أو تخصيص باقة تناسب منحلَك. طلبك يصل بتغليف آمن.</p>
+            <a class="btn btn-gold btn-lg" href="https://wa.me/96599787742" target="_blank" rel="noopener">تواصل الآن</a>
+            <p class="contact-meta">+965 99787742 · توصيل داخل الكويت</p>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <footer class="site-footer">
     <div class="wrap footer-inner">
@@ -467,14 +457,17 @@
       <p class="footer-note">© <span id="year"></span> الرباعية — توصيل داخل الكويت · +965 99787742 · <a href="admin.html">سجل العملاء والفواتير</a></p>
     </div>
   </footer>
+
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
   </script>
   <script src="js/pricing.js"></script>
+  <script src="js/tabs.js"></script>
   <script>
     (() => {
       const input = document.getElementById("svc-hives");
       const wa = document.getElementById("svc-wa");
+      if (!input || !wa) return;
       function refresh() {
         const n = input.value;
         const sup = AlRabaaPricing.supervisionMonthly(n);
