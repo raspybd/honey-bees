@@ -7,11 +7,17 @@ const store = require("./store");
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
+const SITE_URL = process.env.SITE_URL || "https://the4beez.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "alrabaa2026";
 const tokens = new Map();
 
+app.set("trust proxy", 1);
 app.use(cors());
 app.use(express.json({ limit: "5mb" }));
+
+if (!process.env.ADMIN_PASSWORD) {
+  console.warn("[security] ADMIN_PASSWORD is using the default. Set it in Hostinger environment variables.");
+}
 
 function createToken() {
   return crypto.randomBytes(24).toString("hex");
@@ -23,6 +29,8 @@ function requireAuth(req, res, next) {
   if (!token || !tokens.has(token)) {
     return res.status(401).json({ error: "غير مصرح — سجّل الدخول أولًا" });
   }
+  // refresh activity timestamp
+  tokens.set(token, Date.now());
   next();
 }
 
@@ -36,7 +44,12 @@ function handle(res, fn) {
 }
 
 app.get("/api/health", (_req, res) => {
-  res.json({ ok: true, service: "alrabaa-node", time: new Date().toISOString() });
+  res.json({
+    ok: true,
+    service: "alrabaa-node",
+    site: SITE_URL,
+    time: new Date().toISOString(),
+  });
 });
 
 app.post("/api/login", (req, res) => {
@@ -126,5 +139,6 @@ const root = path.join(__dirname, "..");
 app.use(express.static(root, { extensions: ["html"] }));
 
 app.listen(PORT, () => {
-  console.log(`Al Rabaa Node server running on http://localhost:${PORT}`);
+  console.log(`Al Rabaa Node server running on port ${PORT}`);
+  console.log(`Site: ${SITE_URL}`);
 });

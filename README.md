@@ -1,6 +1,7 @@
 # الرباعية للنحل والعسل | Al Rabaa Apiaries
 
-موقع عربي + نظام إدارة Node.js (عملاء، فواتير، متابعة إشراف، عقود).
+الموقع الحي: [https://the4beez.com](https://the4beez.com)  
+لوحة الإدارة: [https://the4beez.com/admin.html](https://the4beez.com/admin.html)
 
 ## التشغيل محليًا
 
@@ -10,33 +11,27 @@ cp .env.example .env
 npm start
 ```
 
-افتح:
 - الموقع: http://localhost:3000
 - الإدارة: http://localhost:3000/admin.html
 
-كلمة المرور الافتراضية: `alrabaa2026` (غيّرها في `.env`)
+## Hostinger (Node.js)
 
-## النشر على Hostinger (Node.js)
+المشروع مربوط بـ GitHub مع Auto-deploy.
 
-1. في Hostinger اختر **Node.js web app**
-2. اربط مستودع GitHub: `raspybd/honey-bees`
-3. إعدادات التشغيل:
-   - **Start command:** `npm start`
-   - **Node version:** 18+
-4. أضف متغير بيئة:
-   - `ADMIN_PASSWORD=كلمة-قوية`
-   - `PORT` عادة يضبطه Hostinger تلقائيًا
-5. بعد النشر افتح `/admin.html` وسجّل الدخول
+Environment variables في hPanel:
 
-## ماذا يخزَّن على السيرفر؟
+| Variable | Example |
+|----------|---------|
+| `ADMIN_PASSWORD` | كلمة مرور قوية |
+| `SITE_URL` | `https://the4beez.com` |
+| `PORT` | يضبطه Hostinger تلقائيًا |
 
-ملف البيانات: `data/db.json`
+Start command: `npm start` · Node 18+
 
-- العملاء
-- الفواتير
-- متابعة الإشراف والزيارات
+## البيانات
 
-صدّر نسخة احتياطية من تبويب النسخ الاحتياطي بانتظام.
+تُحفظ على السيرفر في `data/db.json`  
+صدّر نسخة احتياطية من تبويب النسخ الاحتياطي في لوحة الإدارة.
 
 ## التواصل
 
