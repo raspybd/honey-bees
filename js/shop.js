@@ -9,7 +9,8 @@
   const cartTotalEl = document.getElementById("cart-total");
   const checkoutForm = document.getElementById("checkout-form");
   const cartEmpty = document.getElementById("cart-empty");
-  if (!grid || !cartItemsEl || !checkoutForm) return;
+  const drawer = document.getElementById("cart-drawer");
+  if (!grid || !cartItemsEl || !checkoutForm || !drawer) return;
 
   let catalog = [];
   let cart = loadCart();
@@ -29,6 +30,17 @@
     renderCart();
   }
 
+  function openCart() {
+    drawer.hidden = false;
+    document.body.classList.add("cart-open");
+    drawer.querySelector(".cart-close")?.focus();
+  }
+
+  function closeCart() {
+    drawer.hidden = true;
+    document.body.classList.remove("cart-open");
+  }
+
   function escapeHtml(str) {
     return String(str || "")
       .replace(/&/g, "&amp;")
@@ -45,6 +57,7 @@
       if (!res.ok) throw new Error(data.error || "تعذر التحميل");
       catalog = Array.isArray(data) ? data : [];
       renderCatalog();
+      renderCart();
     } catch (err) {
       grid.innerHTML = `<p class="store-error">تعذر تحميل المتجر. حدّث الصفحة أو تواصل عبر واتساب.</p>`;
       console.error(err);
@@ -149,6 +162,13 @@
     saveCart();
   });
 
+  document.getElementById("btn-open-cart")?.addEventListener("click", openCart);
+  document.getElementById("btn-open-cart-shop")?.addEventListener("click", openCart);
+  drawer.querySelectorAll("[data-close-cart]").forEach((el) => el.addEventListener("click", closeCart));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !drawer.hidden) closeCart();
+  });
+
   checkoutForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (!cart.length) {
@@ -178,6 +198,7 @@
       cart = [];
       saveCart();
       checkoutForm.reset();
+      closeCart();
       window.open(`https://wa.me/${WA}?text=${encodeURIComponent(msg)}`, "_blank");
       alert(`تم تسجيل الطلب ${data.number}. أكمل عبر واتساب.`);
     } catch (err) {

@@ -22,7 +22,7 @@
           <small>AL RABAA</small>
         </span>
       </a>
-      <button type="button" class="cart-chip" data-tab-link="shop" aria-label="السلة">
+      <button type="button" class="cart-chip" id="btn-open-cart" aria-label="فتح السلة" aria-controls="cart-drawer">
         السلة <span data-cart-count hidden>0</span>
       </button>
     </div>
@@ -140,25 +140,13 @@
         <div class="panel-pad">
           <div class="section-head">
             <p class="eyebrow">المنتجات</p>
-            <h2>المنتجات والطلب</h2>
-            <p>أسعار حية من المخزون. أضف للسلة ثم أرسل الطلب عبر واتساب. الشحن يُحسب عند التواصل.</p>
+            <h2>المنتجات</h2>
+            <p>أسعار حية من المخزون. أضف للسلة، ثم افتح السلة من الأعلى لإتمام الطلب عبر واتساب.</p>
           </div>
-          <div class="shop-layout">
-            <div id="store-grid" class="store-grid"></div>
-            <aside class="cart-panel" aria-label="سلة التسوق">
-              <h3>السلة <span data-cart-count hidden>0</span></h3>
-              <p id="cart-empty" class="muted">السلة فارغة.</p>
-              <div id="cart-items" class="cart-items"></div>
-              <p class="cart-total">الإجمالي: <strong id="cart-total">0</strong> د.ك</p>
-              <form id="checkout-form" class="checkout-form">
-                <label>الاسم <input id="shop-name" required placeholder="اسمك" /></label>
-                <label>الجوال <input id="shop-phone" required placeholder="99787742" /></label>
-                <label>المنطقة / الدولة <input id="shop-area" placeholder="الكويت" /></label>
-                <label>ملاحظات <textarea id="shop-notes" rows="2" placeholder="اختياري"></textarea></label>
-                <button type="submit" class="btn btn-gold btn-lg">إرسال الطلب عبر واتساب</button>
-              </form>
-            </aside>
+          <div class="section-cta shop-toolbar">
+            <button type="button" class="btn btn-gold" id="btn-open-cart-shop">فتح السلة لإتمام الطلب</button>
           </div>
+          <div id="store-grid" class="store-grid"></div>
         </div>
       </section>
 
@@ -540,6 +528,27 @@
         </div>
       </section>
     </main>
+  </div>
+
+  <div id="cart-drawer" class="cart-drawer" hidden>
+    <button type="button" class="cart-drawer-backdrop" data-close-cart aria-label="إغلاق السلة"></button>
+    <aside class="cart-drawer-panel" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title">
+      <div class="cart-drawer-head">
+        <h2 id="cart-drawer-title">السلة والطلب</h2>
+        <button type="button" class="cart-close" data-close-cart aria-label="إغلاق">×</button>
+      </div>
+      <p id="cart-empty" class="muted">السلة فارغة. أضف منتجات ثم عد هنا.</p>
+      <div id="cart-items" class="cart-items"></div>
+      <p class="cart-total">الإجمالي: <strong id="cart-total">0</strong> د.ك</p>
+      <p class="muted cart-ship-note">الشحن يُحسب عند التواصل.</p>
+      <form id="checkout-form" class="checkout-form">
+        <label>الاسم <input id="shop-name" required placeholder="اسمك" /></label>
+        <label>الجوال <input id="shop-phone" required placeholder="99787742" /></label>
+        <label>المنطقة / الدولة <input id="shop-area" placeholder="الكويت" /></label>
+        <label>ملاحظات <textarea id="shop-notes" rows="2" placeholder="اختياري"></textarea></label>
+        <button type="submit" class="btn btn-gold btn-lg">إرسال الطلب عبر واتساب</button>
+      </form>
+    </aside>
   </div>
 
   <footer class="site-footer">
