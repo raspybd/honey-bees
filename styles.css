@@ -400,25 +400,6 @@ a {
   color: var(--gold-deep);
 }
 
-.wa-float {
-  position: fixed;
-  left: 1rem;
-  bottom: 1rem;
-  z-index: 40;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 3.4rem;
-  height: 3.4rem;
-  padding: 0 1rem;
-  border-radius: 999px;
-  background: #1f9d52;
-  color: #fff;
-  text-decoration: none;
-  font-weight: 700;
-  box-shadow: 0 14px 30px rgba(15, 90, 40, 0.35);
-}
-
 .section-cta {
   margin-top: 1.6rem;
   display: flex;
