@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="49'1 'D1('9J)">
+  <defs>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F0D078"/>
+      <stop offset="45%" stop-color="#C9A227"/>
+      <stop offset="100%" stop-color="#8C6A12"/>
+    </linearGradient>
+    <linearGradient id="goldSoft" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E8C65A"/>
+      <stop offset="100%" stop-color="#A87F18"/>
+    </linearGradient>
+  </defs>
+  <polygon points="120,18 208,68 208,172 120,222 32,172 32,68" fill="#FFF9F0" stroke="url(#gold)" stroke-width="10" stroke-linejoin="round"/>
+  <line x1="120" y1="18" x2="120" y2="222" stroke="url(#goldSoft)" stroke-width="2.2" opacity="0.55"/>
+  <line x1="32" y1="68" x2="208" y2="172" stroke="url(#goldSoft)" stroke-width="2.2" opacity="0.35"/>
+  <line x1="208" y1="68" x2="32" y2="172" stroke="url(#goldSoft)" stroke-width="2.2" opacity="0.35"/>
+  <!-- honey pot -->
+  <g transform="translate(58,58)" fill="#1A1208" stroke="url(#gold)" stroke-width="1.4">
+    <path d="M10 18h22l-2 18c0 6-4 10-9 10s-9-4-9-10l-2-18z"/>
+    <rect x="8" y="14" width="26" height="5" rx="1.5" fill="url(#gold)" stroke="none"/>
+    <path d="M20 8v8M14 10h14" fill="none" stroke="url(#gold)" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  <!-- hive -->
+  <g transform="translate(158,56)" fill="none" stroke="url(#gold)" stroke-width="2.2">
+    <rect x="0" y="8" width="28" height="8" rx="1.5" fill="#1A1208"/>
+    <rect x="2" y="16" width="24" height="8" rx="1.5" fill="#1A1208"/>
+    <rect x="4" y="24" width="20" height="8" rx="1.5" fill="#1A1208"/>
+  </g>
+  <!-- honeycomb -->
+  <g transform="translate(54,150)" fill="none" stroke="url(#gold)" stroke-width="2">
+    <polygon points="12,0 22,6 22,16 12,22 2,16 2,6"/>
+    <polygon points="26,8 36,14 36,24 26,30 16,24 16,14"/>
+    <polygon points="12,16 22,22 22,32 12,38 2,32 2,22"/>
+  </g>
+  <!-- flower -->
+  <g transform="translate(164,152)" fill="none" stroke="#1A1208" stroke-width="2" stroke-linecap="round">
+    <path d="M12 36V16"/>
+    <circle cx="12" cy="12" r="5" fill="url(#gold)" stroke="none"/>
+    <path d="M12 16c-6 2-8 8-8 12M12 16c6 2 8 8 8 12"/>
+  </g>
+  <!-- bee -->
+  <g transform="translate(120,118)">
+    <ellipse cx="0" cy="8" rx="16" ry="22" fill="#1A1208"/>
+    <path d="M-12 -2h24M-14 8h28M-12 18h24" stroke="url(#gold)" stroke-width="3.2" stroke-linecap="round"/>
+    <circle cx="-7" cy="-18" r="5.5" fill="#1A1208"/>
+    <circle cx="7" cy="-18" r="5.5" fill="#1A1208"/>
+    <circle cx="-7" cy="-18" r="2" fill="url(#gold)"/>
+    <circle cx="7" cy="-18" r="2" fill="url(#gold)"/>
+    <path d="M-18 0c-10-14-2-28 8-18" fill="url(#gold)" opacity="0.85"/>
+    <path d="M18 0c10-14 2-28-8-18" fill="url(#gold)" opacity="0.85"/>
+    <path d="M-4 -26c-2-8 0-12 2-14M4 -26c2-8 0-12-2-14" stroke="#1A1208" stroke-width="2" fill="none" stroke-linecap="round"/>
+  </g>
+</svg>
