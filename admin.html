@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow" />
+  <title>سجل العملاء والفواتير | الرباعية</title>
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body class="admin-body">
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="brand" href="index.html">
+        <img src="assets/logo.svg" alt="" width="40" height="40" />
+        <span>
+          <strong>الرباعية</strong>
+          <small>ADMIN</small>
+        </span>
+      </a>
+      <nav class="admin-tabs" aria-label="أقسام الإدارة">
+        <button type="button" class="tab active" data-tab="customers">سجل العملاء</button>
+        <button type="button" class="tab" data-tab="invoices">الفواتير</button>
+        <button type="button" class="tab" data-tab="create">فاتورة جديدة</button>
+        <button type="button" class="tab" data-tab="backup">نسخ احتياطي</button>
+      </nav>
+      <a class="btn btn-gold" href="index.html">الموقع</a>
+    </div>
+  </header>
+
+  <main class="wrap admin-main">
+    <section id="panel-customers" class="panel active">
+      <div class="panel-head">
+        <div>
+          <h1>سجل العملاء</h1>
+          <p>أضف العملاء وعدّل بياناتهم لاستخدامها في الفواتير.</p>
+        </div>
+        <button type="button" class="btn btn-gold" id="btn-new-customer">عميل جديد</button>
+      </div>
+
+      <form id="customer-form" class="card form-card hidden">
+        <input type="hidden" id="customer-id" />
+        <div class="form-grid">
+          <label>الاسم <input id="customer-name" required placeholder="اسم العميل" /></label>
+          <label>الجوال <input id="customer-phone" placeholder="99787742" /></label>
+          <label>المنطقة <input id="customer-area" placeholder="مثل: السالمية" /></label>
+          <label class="full">ملاحظات <textarea id="customer-notes" rows="2" placeholder="ملاحظات اختيارية"></textarea></label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-dark">حفظ العميل</button>
+          <button type="button" class="btn btn-ghost-dark" id="btn-cancel-customer">إلغاء</button>
+        </div>
+      </form>
+
+      <div class="toolbar">
+        <input type="search" id="customer-search" placeholder="بحث بالاسم أو الجوال..." />
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>الاسم</th>
+              <th>الجوال</th>
+              <th>المنطقة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="customers-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-invoices" class="panel">
+      <div class="panel-head">
+        <div>
+          <h1>الفواتير الإلكترونية</h1>
+          <p>عرض، طباعة، ومشاركة الفواتير المحفوظة على هذا الجهاز.</p>
+        </div>
+        <button type="button" class="btn btn-gold" data-goto="create">إنشاء فاتورة</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>الرقم</th>
+              <th>العميل</th>
+              <th>التاريخ</th>
+              <th>المبلغ</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="invoices-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-create" class="panel">
+      <div class="panel-head">
+        <div>
+          <h1>فاتورة إلكترونية جديدة</h1>
+          <p>اختر عميلًا وأضف البنود ثم أصدر الفاتورة.</p>
+        </div>
+      </div>
+      <form id="invoice-form" class="card form-card">
+        <div class="form-grid">
+          <label>العميل
+            <select id="invoice-customer" required></select>
+          </label>
+          <label>تاريخ الفاتورة
+            <input type="date" id="invoice-date" required />
+          </label>
+          <label class="full">ملاحظات الفاتورة
+            <textarea id="invoice-notes" rows="2" placeholder="مثل: توصيل داخل الكويت · تغليف آمن"></textarea>
+          </label>
+        </div>
+
+        <div class="items-head">
+          <h2>بنود الفاتورة</h2>
+          <button type="button" class="btn btn-dark" id="btn-add-item">إضافة بند</button>
+        </div>
+        <div id="invoice-items" class="items-list"></div>
+        <p class="invoice-total">الإجمالي: <strong id="invoice-total">0</strong> د.ك</p>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-gold">إصدار الفاتورة</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="panel-backup" class="panel">
+      <div class="panel-head">
+        <div>
+          <h1>نسخ احتياطي</h1>
+          <p>البيانات تُحفظ محليًا في المتصفح. صدّر نسخة دوريًا حتى لا تضيع.</p>
+        </div>
+      </div>
+      <div class="card form-card">
+        <div class="form-actions">
+          <button type="button" class="btn btn-dark" id="btn-export">تصدير JSON</button>
+          <label class="btn btn-gold file-btn">استيراد JSON
+            <input type="file" id="btn-import" accept="application/json,.json" hidden />
+          </label>
+        </div>
+        <p class="hint">الاستيراد يستبدل السجل الحالي على هذا الجهاز.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="js/store.js"></script>
+  <script src="js/admin.js"></script>
+</body>
+</html>

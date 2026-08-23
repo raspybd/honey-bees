@@ -1,0 +1,183 @@
+:root {
+  --ink: #1a1208;
+  --soft: #4a3a28;
+  --gold: #c9a227;
+  --line: rgba(26, 18, 8, 0.14);
+  --paper: #fffdf8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans Arabic", Tahoma, sans-serif;
+  background: #ece4d5;
+  color: var(--ink);
+  line-height: 1.7;
+}
+
+.toolbar {
+  max-width: 900px;
+  margin: 1rem auto;
+  padding: 0 1rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.toolbar a,
+.toolbar button {
+  border: 0;
+  border-radius: 999px;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  color: var(--ink);
+  background: #fff;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.toolbar button {
+  background: linear-gradient(135deg, #e2c45a, #c9a227 45%, #8c6a12);
+}
+
+.invoice {
+  max-width: 900px;
+  margin: 0 auto 2rem;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 1.6rem;
+  box-shadow: 0 18px 40px rgba(26, 18, 8, 0.1);
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 2rem;
+}
+
+.inv-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 2px solid rgba(201, 162, 39, 0.45);
+  padding-bottom: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.brand {
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+}
+
+.brand h1 {
+  margin: 0;
+  font-family: "Noto Naskh Arabic", serif;
+  font-size: 1.6rem;
+}
+
+.brand .en {
+  margin: 0.15rem 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  letter-spacing: 0.14em;
+  color: #8c6a12;
+}
+
+.brand .slogan,
+.meta p {
+  margin: 0.15rem 0;
+  color: var(--soft);
+}
+
+.meta h2 {
+  margin: 0 0 0.4rem;
+  color: #8c6a12;
+  font-family: "Noto Naskh Arabic", serif;
+}
+
+.parties {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.parties h3 {
+  margin: 0 0 0.35rem;
+  font-family: "Noto Naskh Arabic", serif;
+}
+
+.parties p {
+  margin: 0.1rem 0;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+th,
+td {
+  border: 1px solid var(--line);
+  padding: 0.65rem 0.75rem;
+  text-align: right;
+}
+
+th {
+  background: rgba(201, 162, 39, 0.12);
+}
+
+.totals {
+  text-align: left;
+  font-size: 1.15rem;
+  margin-bottom: 1rem;
+}
+
+.notes,
+.trust,
+.inv-foot {
+  color: var(--soft);
+}
+
+.trust {
+  font-weight: 700;
+  color: #8c6a12;
+}
+
+@media print {
+  body {
+    background: #fff;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .invoice {
+    box-shadow: none;
+    border: 0;
+    margin: 0;
+    max-width: none;
+    border-radius: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .parties {
+    grid-template-columns: 1fr;
+  }
+}

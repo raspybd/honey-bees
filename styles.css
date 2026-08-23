@@ -781,10 +781,9 @@ a {
   font-size: 0.9rem;
 }
 
-.footer-note {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.9rem;
+.footer-note a {
+  color: var(--gold-deep);
+  font-weight: 600;
 }
 
 @keyframes riseIn {
