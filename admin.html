@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex,nofollow" />
-  <title>سجل العملاء والفواتير | الرباعية</title>
+  <title>لوحة الرباعية | تشغيل ومحاسبة</title>
   <link rel="icon" href="assets/logo.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -17,7 +17,7 @@
     <form id="login-form" class="card form-card login-card">
       <img src="assets/logo.svg" alt="" width="64" height="64" />
       <h1>لوحة الرباعية</h1>
-      <p>the4beez.com — سجّل الدخول لإدارة العملاء والفواتير ومتابعة الإشراف.</p>
+      <p>the4beez.com — تشغيل العملاء والإشراف، مع محاسبة ومخزون مبسّط.</p>
       <label>كلمة المرور
         <input id="login-password" type="password" required placeholder="كلمة مرور الإدارة" />
       </label>
@@ -40,16 +40,21 @@
 
   <div class="admin-shell wrap">
     <aside class="admin-side-tabs" aria-label="أقسام الإدارة">
+      <p class="side-group-label">العملاء والتشغيل</p>
       <button type="button" class="side-tab active" data-tab="customers">سجل العملاء</button>
+      <button type="button" class="side-tab" data-tab="supervision">متابعة الإشراف</button>
+      <button type="button" class="side-tab" data-tab="orders">طلبات المتجر</button>
+      <button type="button" class="side-tab" data-tab="invoices">الفواتير</button>
+      <button type="button" class="side-tab" data-tab="create">فاتورة جديدة</button>
+
+      <p class="side-group-label">المحاسبة والمخزون</p>
       <button type="button" class="side-tab" data-tab="products">الأصناف والمخزون</button>
       <button type="button" class="side-tab" data-tab="purchases">المشتريات</button>
       <button type="button" class="side-tab" data-tab="expenses">المصروفات</button>
       <button type="button" class="side-tab" data-tab="cash">الصندوق</button>
       <button type="button" class="side-tab" data-tab="reports">التقارير</button>
-      <button type="button" class="side-tab" data-tab="orders">طلبات المتجر</button>
-      <button type="button" class="side-tab" data-tab="supervision">متابعة الإشراف</button>
-      <button type="button" class="side-tab" data-tab="invoices">الفواتير</button>
-      <button type="button" class="side-tab" data-tab="create">فاتورة جديدة</button>
+
+      <p class="side-group-label">النظام</p>
       <button type="button" class="side-tab" data-tab="backup">نسخ احتياطي</button>
       <a class="side-tab side-link" href="index.html">الصفحة الرئيسية</a>
       <button type="button" class="side-tab side-logout" id="btn-logout">خروج</button>

@@ -2,9 +2,16 @@
   const tabs = [...document.querySelectorAll(".side-tab")];
   const panels = [...document.querySelectorAll(".tab-panel")];
   const valid = new Set(tabs.map((t) => t.dataset.tab));
+  const aliases = { products: "shop", store: "shop", متجر: "shop" };
+
+  function resolve(name) {
+    const raw = String(name || "").trim();
+    const mapped = aliases[raw] || raw;
+    return valid.has(mapped) ? mapped : "home";
+  }
 
   function showTab(name, pushHash = true) {
-    const id = valid.has(name) ? name : "home";
+    const id = resolve(name);
     tabs.forEach((t) => {
       const on = t.dataset.tab === id;
       t.classList.toggle("active", on);

@@ -880,7 +880,7 @@ const PRODUCT_IMAGES = {
   beeswax: "assets/products/beeswax.jpg",
   propolis: "assets/products/propolis.jpg",
   frames: "assets/products/frames.jpg",
-  suit: "assets/products/suit.jpg",
+  suit: "assets/products/beekeeper-suit.jpg",
   smoker: "assets/products/smoker.jpg",
 };
 

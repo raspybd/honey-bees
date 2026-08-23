@@ -930,6 +930,20 @@ a {
   box-shadow: 0 8px 18px rgba(201, 162, 39, 0.28);
 }
 
+.side-group-label {
+  margin: 0.55rem 0.4rem 0.1rem;
+  padding: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #8a7358;
+}
+
+.side-tab-soft {
+  font-weight: 600;
+  font-size: 0.9rem;
+  opacity: 0.92;
+}
+
 .tab-panels {
   min-width: 0;
   border-radius: 24px;
