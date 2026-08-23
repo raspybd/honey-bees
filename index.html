@@ -26,6 +26,7 @@
         <a href="#why">لماذا الرباعية؟</a>
         <a href="#products">المنتجات</a>
         <a href="#packages">الباقات</a>
+        <a href="#services">الخدمات</a>
         <a href="#kids">للصغار</a>
         <a href="#start">كيف تبدأ</a>
       </nav>
@@ -268,6 +269,69 @@
       </div>
     </section>
 
+    <section id="services" class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="eyebrow">الخدمات</p>
+          <h2>الإشراف على الخلايا والفرز</h2>
+          <p>أسعار شهرية للإشراف، وأسعار فرز حسب عدد الخلايا — احسب تكلفتك فورًا.</p>
+        </div>
+
+        <div class="services-grid">
+          <article class="service-card">
+            <h3>الإشراف على الخلايا</h3>
+            <p class="service-note">اشتراك شهري حسب عدد الخلايا</p>
+            <div class="price-table">
+              <div><span>من 1 إلى 5 خلايا</span><strong>15 د.ك / شهر</strong></div>
+              <div><span>من 5 إلى 10 خلايا</span><strong>20 د.ك / شهر</strong></div>
+              <div><span>من 10 إلى 15 خلية</span><strong>25 د.ك / شهر</strong></div>
+              <div><span>من 15 إلى 20 خلية</span><strong>30 د.ك / شهر</strong></div>
+              <div><span>أي خلية فوق 20</span><strong>+1 د.ك / شهر لكل خلية زيادة</strong></div>
+            </div>
+          </article>
+
+          <article class="service-card">
+            <h3>الفرز</h3>
+            <p class="service-note">السعر للخلية الواحدة حسب الباقة</p>
+            <div class="price-table">
+              <div><span>من 1 إلى 5 خلايا</span><strong>5 د.ك / خلية</strong></div>
+              <div><span>من 5 إلى 10 خلايا</span><strong>4.5 د.ك / خلية</strong></div>
+              <div><span>من 10 إلى 15 خلية</span><strong>3 د.ك / خلية</strong></div>
+              <div><span>من 15 إلى 20 خلية</span><strong>2.750 د.ك / خلية</strong></div>
+              <div><span>أي خلية فوق باقة الـ 20</span><strong>2.5 د.ك / خلية زيادة</strong></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="calc-card">
+          <h3>حاسبة الخدمات</h3>
+          <p>أدخل عدد الخلايا لمعرفة تكلفة الإشراف الشهري وتكلفة الفرز.</p>
+          <label class="calc-label">
+            عدد الخلايا
+            <input type="number" id="svc-hives" min="1" step="1" value="5" />
+          </label>
+          <div class="calc-results">
+            <article>
+              <h4>الإشراف الشهري</h4>
+              <p class="calc-price"><span id="sup-total">15</span> د.ك</p>
+              <p class="calc-meta" id="sup-meta">باقة 1–5 خلايا</p>
+            </article>
+            <article>
+              <h4>تكلفة الفرز</h4>
+              <p class="calc-price"><span id="ext-total">25</span> د.ك</p>
+              <p class="calc-meta" id="ext-meta">5 × 5 د.ك</p>
+            </article>
+          </div>
+          <a class="btn btn-gold" id="svc-wa" href="https://wa.me/96599787742" target="_blank" rel="noopener">اطلب الخدمة عبر واتساب</a>
+        </div>
+
+        <div class="section-cta">
+          <p class="trust-line dark">طلبك يصل بتغليف آمن</p>
+          <a class="btn btn-dark" href="https://wa.me/96599787742?text=%D8%A3%D8%B1%D9%8A%D8%AF%20%D8%AE%D8%AF%D9%85%D8%A9%20%D8%A7%D9%84%D8%A5%D8%B4%D8%B1%D8%A7%D9%81%20%D8%A3%D9%88%20%D8%A7%D9%84%D9%81%D8%B1%D8%B2" target="_blank" rel="noopener">تواصل للخدمات</a>
+        </div>
+      </div>
+    </section>
+
     <section id="kids" class="section kids">
       <div class="wrap kids-grid">
         <div class="kids-media">
@@ -405,6 +469,26 @@
   </footer>
   <script>
     document.getElementById("year").textContent = new Date().getFullYear();
+  </script>
+  <script src="js/pricing.js"></script>
+  <script>
+    (() => {
+      const input = document.getElementById("svc-hives");
+      const wa = document.getElementById("svc-wa");
+      function refresh() {
+        const n = input.value;
+        const sup = AlRabaaPricing.supervisionMonthly(n);
+        const ext = AlRabaaPricing.extractionTotal(n);
+        document.getElementById("sup-total").textContent = AlRabaaPricing.money(sup.total);
+        document.getElementById("sup-meta").textContent = [sup.label, sup.detail].filter(Boolean).join(" — ");
+        document.getElementById("ext-total").textContent = AlRabaaPricing.money(ext.total);
+        document.getElementById("ext-meta").textContent = [ext.label, ext.detail].filter(Boolean).join(" — ");
+        const msg = `أرغب بطلب خدمة من الرباعية\nعدد الخلايا: ${Math.max(1, Math.floor(Number(n) || 0))}\nالإشراف الشهري: ${AlRabaaPricing.money(sup.total)} د.ك\nالفرز: ${AlRabaaPricing.money(ext.total)} د.ك`;
+        wa.href = `https://wa.me/96599787742?text=${encodeURIComponent(msg)}`;
+      }
+      input.addEventListener("input", refresh);
+      refresh();
+    })();
   </script>
 </body>
 </html>

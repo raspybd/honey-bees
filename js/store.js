@@ -14,6 +14,16 @@ const AlRabaaStore = (() => {
     { id: "pkg-beginner", name: "باقة المبتدئ", price: 65 },
     { id: "pkg-expand", name: "باقة التوسعة", price: 55 },
     { id: "pkg-honey", name: "باقة العسل", price: 20 },
+    { id: "svc-sup-1-5", name: "إشراف شهري (1–5 خلايا)", price: 15 },
+    { id: "svc-sup-5-10", name: "إشراف شهري (5–10 خلايا)", price: 20 },
+    { id: "svc-sup-10-15", name: "إشراف شهري (10–15 خلية)", price: 25 },
+    { id: "svc-sup-15-20", name: "إشراف شهري (15–20 خلية)", price: 30 },
+    { id: "svc-sup-extra", name: "إشراف شهري — خلية زيادة فوق 20", price: 1 },
+    { id: "svc-extract-rate-5", name: "فرز — سعر الخلية (باقة 1–5)", price: 5 },
+    { id: "svc-extract-rate-4-5", name: "فرز — سعر الخلية (باقة 5–10)", price: 4.5 },
+    { id: "svc-extract-rate-3", name: "فرز — سعر الخلية (باقة 10–15)", price: 3 },
+    { id: "svc-extract-rate-2-75", name: "فرز — سعر الخلية (باقة 15–20)", price: 2.75 },
+    { id: "svc-extract-extra", name: "فرز — خلية زيادة فوق 20", price: 2.5 },
   ];
 
   function empty() {
@@ -169,7 +179,12 @@ const AlRabaaStore = (() => {
   }
 
   function getCatalog() {
-    return load().catalog;
+    const saved = load().catalog || [];
+    const byId = new Map(saved.map((item) => [item.id, item]));
+    defaultCatalog.forEach((item) => {
+      if (!byId.has(item.id)) byId.set(item.id, item);
+    });
+    return Array.from(byId.values());
   }
 
   function exportBackup() {
