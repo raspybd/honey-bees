@@ -30,6 +30,7 @@ const AlRabaaStore = (() => {
     return {
       customers: [],
       invoices: [],
+      supervisions: [],
       seq: 1000,
       catalog: defaultCatalog,
     };
@@ -187,6 +188,125 @@ const AlRabaaStore = (() => {
     return Array.from(byId.values());
   }
 
+  function parseHiveNumbers(raw) {
+    return String(raw || "")
+      .split(/[\n,،\s]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+
+  function supervisionFee(hiveCount) {
+    if (typeof AlRabaaPricing !== "undefined" && AlRabaaPricing.supervisionMonthly) {
+      return AlRabaaPricing.supervisionMonthly(hiveCount).total;
+    }
+    const n = Math.max(0, Math.floor(Number(hiveCount) || 0));
+    if (n < 1) return 0;
+    if (n <= 5) return 15;
+    if (n <= 10) return 20;
+    if (n <= 15) return 25;
+    if (n <= 20) return 30;
+    return 30 + (n - 20);
+  }
+
+  function listSupervisions() {
+    return (load().supervisions || []).sort((a, b) =>
+      (b.updatedAt || b.createdAt || "").localeCompare(a.updatedAt || a.createdAt || "")
+    );
+  }
+
+  function getSupervision(id) {
+    return (load().supervisions || []).find((s) => s.id === id) || null;
+  }
+
+  function upsertSupervision(input) {
+    const data = load();
+    if (!Array.isArray(data.supervisions)) data.supervisions = [];
+    const now = new Date().toISOString();
+    const customer = data.customers.find((c) => c.id === input.customerId);
+    if (!customer) throw new Error("اختر عميلًا من السجل");
+
+    const hiveNumbers = Array.isArray(input.hiveNumbers)
+      ? input.hiveNumbers.map(String).map((s) => s.trim()).filter(Boolean)
+      : parseHiveNumbers(input.hiveNumbers);
+    const hiveCount = Math.max(
+      Number(input.hiveCount) || 0,
+      hiveNumbers.length
+    );
+    if (hiveCount < 1) throw new Error("أدخل عدد الخلايا أو أرقامها");
+
+    const base = {
+      customerId: customer.id,
+      customerName: customer.name,
+      customerPhone: customer.phone || "",
+      customerArea: customer.area || "",
+      hiveCount,
+      hiveNumbers,
+      beekeeper: String(input.beekeeper || "").trim(),
+      location: String(input.location || "").trim(),
+      installDate: String(input.installDate || "").trim(),
+      nextVisitDate: String(input.nextVisitDate || "").trim(),
+      lastVisitDate: String(input.lastVisitDate || "").trim(),
+      extractionAppointment: String(input.extractionAppointment || "").trim(),
+      extractionDate: String(input.extractionDate || "").trim(),
+      status: input.status || "active",
+      monthlyFee: supervisionFee(hiveCount),
+      notes: String(input.notes || "").trim(),
+      updatedAt: now,
+    };
+
+    if (input.id) {
+      const idx = data.supervisions.findIndex((s) => s.id === input.id);
+      if (idx === -1) throw new Error("سجل الإشراف غير موجود");
+      data.supervisions[idx] = {
+        ...data.supervisions[idx],
+        ...base,
+        visits: Array.isArray(data.supervisions[idx].visits) ? data.supervisions[idx].visits : [],
+      };
+      save(data);
+      return data.supervisions[idx];
+    }
+
+    const record = {
+      id: uid("sup"),
+      ...base,
+      visits: [],
+      createdAt: now,
+    };
+    data.supervisions.unshift(record);
+    save(data);
+    return record;
+  }
+
+  function addSupervisionVisit(id, visit) {
+    const data = load();
+    const rec = (data.supervisions || []).find((s) => s.id === id);
+    if (!rec) throw new Error("سجل الإشراف غير موجود");
+    if (!Array.isArray(rec.visits)) rec.visits = [];
+    const entry = {
+      id: uid("vis"),
+      date: String(visit.date || "").trim() || nowDate(),
+      beekeeper: String(visit.beekeeper || rec.beekeeper || "").trim(),
+      notes: String(visit.notes || "").trim(),
+      createdAt: new Date().toISOString(),
+    };
+    rec.visits.unshift(entry);
+    rec.lastVisitDate = entry.date;
+    if (visit.nextVisitDate) rec.nextVisitDate = String(visit.nextVisitDate).trim();
+    rec.updatedAt = new Date().toISOString();
+    save(data);
+    return rec;
+  }
+
+  function nowDate() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function deleteSupervision(id) {
+    const data = load();
+    data.supervisions = (data.supervisions || []).filter((s) => s.id !== id);
+    save(data);
+  }
+
   function exportBackup() {
     return JSON.stringify(load(), null, 2);
   }
@@ -199,6 +319,7 @@ const AlRabaaStore = (() => {
     save({
       ...empty(),
       ...parsed,
+      supervisions: Array.isArray(parsed.supervisions) ? parsed.supervisions : [],
       catalog: Array.isArray(parsed.catalog) && parsed.catalog.length ? parsed.catalog : defaultCatalog,
     });
   }
@@ -213,6 +334,12 @@ const AlRabaaStore = (() => {
     createInvoice,
     updateInvoiceStatus,
     deleteInvoice,
+    listSupervisions,
+    getSupervision,
+    upsertSupervision,
+    addSupervisionVisit,
+    deleteSupervision,
+    supervisionFee,
     getCatalog,
     exportBackup,
     importBackup,

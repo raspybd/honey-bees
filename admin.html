@@ -24,6 +24,7 @@
       </a>
       <nav class="admin-tabs" aria-label="أقسام الإدارة">
         <button type="button" class="tab active" data-tab="customers">سجل العملاء</button>
+        <button type="button" class="tab" data-tab="supervision">متابعة الإشراف</button>
         <button type="button" class="tab" data-tab="invoices">الفواتير</button>
         <button type="button" class="tab" data-tab="create">فاتورة جديدة</button>
         <button type="button" class="tab" data-tab="backup">نسخ احتياطي</button>
@@ -131,6 +132,107 @@
       </form>
     </section>
 
+    <section id="panel-supervision" class="panel">
+      <div class="panel-head">
+        <div>
+          <h1>متابعة الإشراف</h1>
+          <p>متابعة عملاء الإشراف: الخلايا، النحال، الزيارات، التركيب والفرز.</p>
+        </div>
+        <button type="button" class="btn btn-gold" id="btn-new-supervision">سجل إشراف جديد</button>
+      </div>
+
+      <form id="supervision-form" class="card form-card hidden">
+        <input type="hidden" id="sup-id" />
+        <div class="form-grid">
+          <label>العميل
+            <select id="sup-customer" required></select>
+          </label>
+          <label>النحال المشرف
+            <input id="sup-beekeeper" placeholder="اسم النحال" required />
+          </label>
+          <label>عدد الخلايا
+            <input id="sup-hive-count" type="number" min="1" step="1" required />
+          </label>
+          <label>الرسوم الشهرية المتوقعة
+            <input id="sup-fee" type="text" readonly />
+          </label>
+          <label class="full">أرقام الخلايا
+            <textarea id="sup-hive-numbers" rows="2" placeholder="مثال: 1، 2، 3 أو كل رقم في سطر"></textarea>
+          </label>
+          <label>موقع المنحل
+            <input id="sup-location" placeholder="المنطقة / الموقع" />
+          </label>
+          <label>حالة الإشراف
+            <select id="sup-status">
+              <option value="active">نشط</option>
+              <option value="paused">موقوف مؤقتًا</option>
+              <option value="ended">منتهي</option>
+            </select>
+          </label>
+          <label>تاريخ التركيب
+            <input id="sup-install" type="date" />
+          </label>
+          <label>موعد الزيارة القادم
+            <input id="sup-next-visit" type="date" />
+          </label>
+          <label>تاريخ آخر زيارة
+            <input id="sup-last-visit" type="date" />
+          </label>
+          <label>موعد الفرز
+            <input id="sup-extract-appt" type="date" />
+          </label>
+          <label>تاريخ الفرز الفعلي
+            <input id="sup-extract-date" type="date" />
+          </label>
+          <label class="full">ملاحظات المتابعة
+            <textarea id="sup-notes" rows="2" placeholder="ملاحظات عن حالة الخلايا أو الاتفاق"></textarea>
+          </label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-dark">حفظ سجل الإشراف</button>
+          <button type="button" class="btn btn-ghost-dark" id="btn-cancel-supervision">إلغاء</button>
+        </div>
+      </form>
+
+      <div class="card form-card hidden" id="visit-form-card">
+        <h2 class="subhead">تسجيل زيارة</h2>
+        <p class="hint" id="visit-target-label"></p>
+        <input type="hidden" id="visit-sup-id" />
+        <div class="form-grid">
+          <label>تاريخ الزيارة <input id="visit-date" type="date" required /></label>
+          <label>النحال <input id="visit-beekeeper" placeholder="اسم النحال" /></label>
+          <label>موعد الزيارة التالية <input id="visit-next" type="date" /></label>
+          <label class="full">ملاحظات الزيارة <textarea id="visit-notes" rows="2"></textarea></label>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn btn-gold" id="btn-save-visit">حفظ الزيارة</button>
+          <button type="button" class="btn btn-ghost-dark" id="btn-cancel-visit">إغلاق</button>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <input type="search" id="sup-search" placeholder="بحث بالعميل أو النحال أو رقم خلية..." />
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>العميل</th>
+              <th>الخلايا</th>
+              <th>النحال</th>
+              <th>التركيب</th>
+              <th>الزيارة القادمة</th>
+              <th>موعد الفرز</th>
+              <th>تاريخ الفرز</th>
+              <th>الحالة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="supervision-body"></tbody>
+        </table>
+      </div>
+    </section>
+
     <section id="panel-backup" class="panel">
       <div class="panel-head">
         <div>
@@ -145,12 +247,13 @@
             <input type="file" id="btn-import" accept="application/json,.json" hidden />
           </label>
         </div>
-        <p class="hint">الاستيراد يستبدل السجل الحالي على هذا الجهاز.</p>
+        <p class="hint">الاستيراد يستبدل السجل الحالي على هذا الجهاز (عملاء، فواتير، ومتابعة الإشراف).</p>
       </div>
     </section>
   </main>
 
   <div id="toast" class="toast" hidden></div>
+  <script src="js/pricing.js"></script>
   <script src="js/store.js"></script>
   <script src="js/admin.js"></script>
 </body>

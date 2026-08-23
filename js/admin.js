@@ -1,7 +1,14 @@
 (() => {
   const WA = "96599787742";
   const money = (n) => Number(n || 0).toLocaleString("ar-KW", { minimumFractionDigits: 0, maximumFractionDigits: 3 });
-  const statusLabel = { issued: "صادرة", paid: "مدفوعة", cancelled: "ملغاة" };
+  const statusLabel = {
+    issued: "صادرة",
+    paid: "مدفوعة",
+    cancelled: "ملغاة",
+    active: "نشط",
+    paused: "موقوف",
+    ended: "منتهي",
+  };
 
   const toastEl = document.getElementById("toast");
   function toast(msg) {
@@ -19,6 +26,7 @@
     if (name === "customers") renderCustomers();
     if (name === "invoices") renderInvoices();
     if (name === "create") prepareInvoiceForm();
+    if (name === "supervision") renderSupervisions();
   }
 
   document.querySelectorAll(".tab").forEach((btn) => {
@@ -275,11 +283,236 @@
       AlRabaaStore.importBackup(text);
       renderCustomers();
       renderInvoices();
+      renderSupervisions();
       toast("تم الاستيراد بنجاح");
     } catch (err) {
       toast(err.message || "فشل الاستيراد");
     } finally {
       e.target.value = "";
+    }
+  });
+
+  /* Supervision follow-up */
+  const supervisionForm = document.getElementById("supervision-form");
+  const supervisionBody = document.getElementById("supervision-body");
+  const visitCard = document.getElementById("visit-form-card");
+
+  function fillSupervisionCustomers(selectedId) {
+    const select = document.getElementById("sup-customer");
+    const customers = AlRabaaStore.listCustomers();
+    select.innerHTML = customers.length
+      ? customers
+          .map(
+            (c) =>
+              `<option value="${c.id}" ${c.id === selectedId ? "selected" : ""}>${escapeHtml(c.name)} — ${escapeHtml(
+                c.phone || "بدون جوال"
+              )}</option>`
+          )
+          .join("")
+      : `<option value="">أضف عميلًا أولًا من سجل العملاء</option>`;
+  }
+
+  function updateSupFee() {
+    const n = document.getElementById("sup-hive-count").value;
+    document.getElementById("sup-fee").value = `${money(AlRabaaStore.supervisionFee(n))} د.ك / شهر`;
+  }
+
+  function resetSupervisionForm() {
+    supervisionForm.reset();
+    document.getElementById("sup-id").value = "";
+    supervisionForm.classList.add("hidden");
+    fillSupervisionCustomers();
+    updateSupFee();
+  }
+
+  document.getElementById("btn-new-supervision").addEventListener("click", () => {
+    resetSupervisionForm();
+    supervisionForm.classList.remove("hidden");
+    fillSupervisionCustomers();
+    document.getElementById("sup-hive-count").value = 5;
+    updateSupFee();
+    supervisionForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+  document.getElementById("btn-cancel-supervision").addEventListener("click", resetSupervisionForm);
+  document.getElementById("sup-hive-count").addEventListener("input", updateSupFee);
+  document.getElementById("sup-hive-numbers").addEventListener("input", () => {
+    const count = document
+      .getElementById("sup-hive-numbers")
+      .value.split(/[\n,،\s]+/)
+      .map((s) => s.trim())
+      .filter(Boolean).length;
+    if (count > 0) {
+      document.getElementById("sup-hive-count").value = count;
+      updateSupFee();
+    }
+  });
+
+  supervisionForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    try {
+      AlRabaaStore.upsertSupervision({
+        id: document.getElementById("sup-id").value || undefined,
+        customerId: document.getElementById("sup-customer").value,
+        beekeeper: document.getElementById("sup-beekeeper").value,
+        hiveCount: document.getElementById("sup-hive-count").value,
+        hiveNumbers: document.getElementById("sup-hive-numbers").value,
+        location: document.getElementById("sup-location").value,
+        status: document.getElementById("sup-status").value,
+        installDate: document.getElementById("sup-install").value,
+        nextVisitDate: document.getElementById("sup-next-visit").value,
+        lastVisitDate: document.getElementById("sup-last-visit").value,
+        extractionAppointment: document.getElementById("sup-extract-appt").value,
+        extractionDate: document.getElementById("sup-extract-date").value,
+        notes: document.getElementById("sup-notes").value,
+      });
+      resetSupervisionForm();
+      renderSupervisions();
+      toast("تم حفظ سجل الإشراف");
+    } catch (err) {
+      toast(err.message || "تعذر الحفظ");
+    }
+  });
+
+  document.getElementById("sup-search").addEventListener("input", renderSupervisions);
+
+  function renderSupervisions() {
+    fillSupervisionCustomers(document.getElementById("sup-customer").value);
+    const q = (document.getElementById("sup-search").value || "").trim().toLowerCase();
+    const rows = AlRabaaStore.listSupervisions().filter((s) => {
+      if (!q) return true;
+      return [s.customerName, s.customerPhone, s.beekeeper, s.location, ...(s.hiveNumbers || [])]
+        .join(" ")
+        .toLowerCase()
+        .includes(q);
+    });
+
+    supervisionBody.innerHTML = rows.length
+      ? rows
+          .map((s) => {
+            const hives = (s.hiveNumbers || []).length
+              ? `${s.hiveCount} — ${(s.hiveNumbers || []).join("، ")}`
+              : String(s.hiveCount || "—");
+            const overdue =
+              s.status === "active" && s.nextVisitDate && s.nextVisitDate < new Date().toISOString().slice(0, 10);
+            return `
+      <tr class="${overdue ? "row-alert" : ""}">
+        <td>
+          <strong>${escapeHtml(s.customerName)}</strong>
+          <div class="muted" dir="ltr">${escapeHtml(s.customerPhone || "")}</div>
+          <div class="muted">${escapeHtml(s.customerArea || s.location || "")}</div>
+          <div class="muted">الرسوم: ${money(s.monthlyFee)} د.ك/شهر</div>
+        </td>
+        <td>${escapeHtml(hives)}</td>
+        <td>${escapeHtml(s.beekeeper || "—")}</td>
+        <td>${escapeHtml(s.installDate || "—")}</td>
+        <td>${escapeHtml(s.nextVisitDate || "—")}${overdue ? '<div class="muted danger-text">متأخرة</div>' : ""}</td>
+        <td>${escapeHtml(s.extractionAppointment || "—")}</td>
+        <td>${escapeHtml(s.extractionDate || "—")}</td>
+        <td><span class="badge ${s.status}">${statusLabel[s.status] || s.status}</span></td>
+        <td class="actions">
+          <button type="button" data-edit-sup="${s.id}">تعديل</button>
+          <button type="button" data-visit-sup="${s.id}">زيارة</button>
+          <button type="button" data-wa-sup="${s.id}">واتساب</button>
+          <button type="button" data-del-sup="${s.id}" class="danger">حذف</button>
+        </td>
+      </tr>
+      ${
+        (s.visits || []).length
+          ? `<tr class="visit-history"><td colspan="9"><strong>سجل الزيارات:</strong> ${(s.visits || [])
+              .slice(0, 5)
+              .map((v) => `${escapeHtml(v.date)} (${escapeHtml(v.beekeeper || "—")})${v.notes ? " — " + escapeHtml(v.notes) : ""}`)
+              .join(" · ")}</td></tr>`
+          : ""
+      }`;
+          })
+          .join("")
+      : `<tr><td colspan="9" class="empty">لا توجد سجلات إشراف بعد. أضف عميلًا ثم أنشئ سجل إشراف.</td></tr>`;
+  }
+
+  supervisionBody.addEventListener("click", (e) => {
+    const editId = e.target.getAttribute("data-edit-sup");
+    const visitId = e.target.getAttribute("data-visit-sup");
+    const waId = e.target.getAttribute("data-wa-sup");
+    const delId = e.target.getAttribute("data-del-sup");
+
+    if (editId) {
+      const s = AlRabaaStore.getSupervision(editId);
+      if (!s) return;
+      fillSupervisionCustomers(s.customerId);
+      document.getElementById("sup-id").value = s.id;
+      document.getElementById("sup-beekeeper").value = s.beekeeper || "";
+      document.getElementById("sup-hive-count").value = s.hiveCount || "";
+      document.getElementById("sup-hive-numbers").value = (s.hiveNumbers || []).join("، ");
+      document.getElementById("sup-location").value = s.location || "";
+      document.getElementById("sup-status").value = s.status || "active";
+      document.getElementById("sup-install").value = s.installDate || "";
+      document.getElementById("sup-next-visit").value = s.nextVisitDate || "";
+      document.getElementById("sup-last-visit").value = s.lastVisitDate || "";
+      document.getElementById("sup-extract-appt").value = s.extractionAppointment || "";
+      document.getElementById("sup-extract-date").value = s.extractionDate || "";
+      document.getElementById("sup-notes").value = s.notes || "";
+      updateSupFee();
+      supervisionForm.classList.remove("hidden");
+      supervisionForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    if (visitId) {
+      const s = AlRabaaStore.getSupervision(visitId);
+      if (!s) return;
+      document.getElementById("visit-sup-id").value = s.id;
+      document.getElementById("visit-target-label").textContent = `زيارة لـ ${s.customerName} — ${s.hiveCount} خلية`;
+      document.getElementById("visit-date").value = new Date().toISOString().slice(0, 10);
+      document.getElementById("visit-beekeeper").value = s.beekeeper || "";
+      document.getElementById("visit-next").value = "";
+      document.getElementById("visit-notes").value = "";
+      visitCard.classList.remove("hidden");
+      visitCard.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    if (waId) {
+      const s = AlRabaaStore.getSupervision(waId);
+      if (!s) return;
+      const phone = normalizePhone(s.customerPhone) || WA;
+      const text = [
+        `متابعة إشراف — الرباعية`,
+        `العميل: ${s.customerName}`,
+        `عدد الخلايا: ${s.hiveCount}`,
+        `أرقام الخلايا: ${(s.hiveNumbers || []).join("، ") || "—"}`,
+        `النحال المشرف: ${s.beekeeper || "—"}`,
+        `تاريخ التركيب: ${s.installDate || "—"}`,
+        `موعد الزيارة القادم: ${s.nextVisitDate || "—"}`,
+        `موعد الفرز: ${s.extractionAppointment || "—"}`,
+        `تاريخ الفرز: ${s.extractionDate || "—"}`,
+        `الرسوم الشهرية: ${money(s.monthlyFee)} د.ك`,
+      ].join("\n");
+      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
+    }
+
+    if (delId) {
+      if (!confirm("حذف سجل الإشراف؟")) return;
+      AlRabaaStore.deleteSupervision(delId);
+      renderSupervisions();
+      toast("تم حذف سجل الإشراف");
+    }
+  });
+
+  document.getElementById("btn-cancel-visit").addEventListener("click", () => {
+    visitCard.classList.add("hidden");
+  });
+
+  document.getElementById("btn-save-visit").addEventListener("click", () => {
+    try {
+      AlRabaaStore.addSupervisionVisit(document.getElementById("visit-sup-id").value, {
+        date: document.getElementById("visit-date").value,
+        beekeeper: document.getElementById("visit-beekeeper").value,
+        nextVisitDate: document.getElementById("visit-next").value,
+        notes: document.getElementById("visit-notes").value,
+      });
+      visitCard.classList.add("hidden");
+      renderSupervisions();
+      toast("تم تسجيل الزيارة");
+    } catch (err) {
+      toast(err.message || "تعذر حفظ الزيارة");
     }
   });
 
@@ -304,5 +537,5 @@
       .replace(/"/g, "&quot;");
   }
 
-  showTab("customers");
+  showTab((location.hash || "").replace("#", "") || "customers");
 })();
