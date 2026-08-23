@@ -26,7 +26,7 @@
   </div>
 
   <div id="admin-app" class="hidden">
-  <header class="site-header">
+  <header class="site-header compact">
     <div class="wrap header-inner">
       <a class="brand" href="index.html">
         <img src="assets/logo.svg" alt="" width="40" height="40" />
@@ -35,21 +35,21 @@
           <small>ADMIN</small>
         </span>
       </a>
-      <nav class="admin-tabs" aria-label="أقسام الإدارة">
-        <button type="button" class="tab active" data-tab="customers">سجل العملاء</button>
-        <button type="button" class="tab" data-tab="supervision">متابعة الإشراف</button>
-        <button type="button" class="tab" data-tab="invoices">الفواتير</button>
-        <button type="button" class="tab" data-tab="create">فاتورة جديدة</button>
-        <button type="button" class="tab" data-tab="backup">نسخ احتياطي</button>
-      </nav>
-      <div class="header-actions">
-        <button type="button" class="btn btn-ghost-dark" id="btn-logout">خروج</button>
-        <a class="btn btn-gold" href="index.html">الموقع</a>
-      </div>
     </div>
   </header>
 
-  <main class="wrap admin-main">
+  <div class="admin-shell wrap">
+    <aside class="admin-side-tabs" aria-label="أقسام الإدارة">
+      <button type="button" class="side-tab active" data-tab="customers">سجل العملاء</button>
+      <button type="button" class="side-tab" data-tab="supervision">متابعة الإشراف</button>
+      <button type="button" class="side-tab" data-tab="invoices">الفواتير</button>
+      <button type="button" class="side-tab" data-tab="create">فاتورة جديدة</button>
+      <button type="button" class="side-tab" data-tab="backup">نسخ احتياطي</button>
+      <a class="side-tab side-link" href="index.html">الصفحة الرئيسية</a>
+      <button type="button" class="side-tab side-logout" id="btn-logout">خروج</button>
+    </aside>
+
+  <main class="admin-main">
     <section id="panel-customers" class="panel active">
       <div class="panel-head">
         <div>
@@ -267,6 +267,7 @@
       </div>
     </section>
   </main>
+  </div>
   </div>
 
   <div id="toast" class="toast" hidden></div>

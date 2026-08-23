@@ -25,7 +25,7 @@
   }
 
   async function showTab(name) {
-    document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
+    document.querySelectorAll(".side-tab[data-tab]").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
     document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === `panel-${name}`));
     if (name === "customers") await renderCustomers();
     if (name === "invoices") await renderInvoices();
@@ -33,7 +33,7 @@
     if (name === "supervision") await renderSupervisions();
   }
 
-  document.querySelectorAll(".tab").forEach((btn) => {
+  document.querySelectorAll(".side-tab[data-tab]").forEach((btn) => {
     btn.addEventListener("click", () => showTab(btn.dataset.tab));
   });
   document.querySelectorAll("[data-goto]").forEach((btn) => {
