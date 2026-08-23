@@ -8,6 +8,8 @@
     active: "نشط",
     paused: "موقوف",
     ended: "منتهي",
+    new: "جديد",
+    confirmed: "مؤكد",
   };
 
   const toastEl = document.getElementById("toast");
@@ -33,6 +35,7 @@
     if (name === "expenses") await renderExpenses();
     if (name === "cash") await renderCash();
     if (name === "reports") await renderReports();
+    if (name === "orders") await renderOrders();
     if (name === "invoices") await renderInvoices();
     if (name === "create") await prepareInvoiceForm();
     if (name === "supervision") await renderSupervisions();
@@ -591,6 +594,7 @@
       <article class="stat-card"><span>رصيد الصندوق</span><strong>${money(r.cashBalance)} د.ك</strong></article>
       <article class="stat-card"><span>قيمة المخزون (بالتكلفة)</span><strong>${money(r.stockValue)} د.ك</strong></article>
       <article class="stat-card"><span>فواتير مؤكدة / بانتظار</span><strong>${r.paidInvoicesCount} / ${r.openInvoicesCount}</strong></article>
+      <article class="stat-card"><span>طلبات متجر جديدة</span><strong>${r.newOrdersCount || 0}</strong></article>
     `;
     const low = r.lowStock || [];
     document.getElementById("reports-low-body").innerHTML = low.length
@@ -606,6 +610,78 @@
           .join("")
       : `<tr><td colspan="3" class="empty">لا أصناف منخفضة حاليًا.</td></tr>`;
   }
+
+  const ordersBody = document.getElementById("orders-body");
+
+  async function renderOrders() {
+    const rows = await AlRabaaStore.listOrders();
+    ordersBody.innerHTML = rows.length
+      ? rows
+          .map((o) => {
+            const items = (o.items || []).map((i) => `${escapeHtml(i.name)} × ${i.qty}`).join("<br>");
+            return `
+      <tr>
+        <td><strong>${escapeHtml(o.number)}</strong><div class="muted">${items}</div></td>
+        <td>${escapeHtml(o.customerName)}<div class="muted" dir="ltr">${escapeHtml(o.phone || "")}</div><div class="muted">${escapeHtml(o.area || "")}</div></td>
+        <td>${escapeHtml((o.createdAt || "").slice(0, 10))}</td>
+        <td>${money(o.total)} د.ك</td>
+        <td>
+          <span class="badge ${o.status === "confirmed" ? "paid" : o.status === "cancelled" ? "cancelled" : ""}">${statusLabel[o.status] || o.status}</span>
+          ${o.stockDeducted ? `<div class="muted">خُصم المخزون</div>` : ""}
+        </td>
+        <td class="actions">
+          ${
+            o.status === "new"
+              ? `<button type="button" data-confirm-order="${o.id}">تأكيد وخصم المخزون</button>
+                 <button type="button" data-cancel-order="${o.id}">إلغاء</button>
+                 <button type="button" data-del-order="${o.id}" class="danger">حذف</button>`
+              : o.status === "cancelled"
+                ? `<button type="button" data-del-order="${o.id}" class="danger">حذف</button>`
+                : `<span class="muted">مؤكد</span>`
+          }
+          <button type="button" data-wa-order="${o.id}">واتساب</button>
+        </td>
+      </tr>`;
+          })
+          .join("")
+      : `<tr><td colspan="6" class="empty">لا طلبات متجر بعد.</td></tr>`;
+  }
+
+  ordersBody.addEventListener("click", async (e) => {
+    const confirmId = e.target.getAttribute("data-confirm-order");
+    const cancelId = e.target.getAttribute("data-cancel-order");
+    const delId = e.target.getAttribute("data-del-order");
+    const waId = e.target.getAttribute("data-wa-order");
+    try {
+      if (confirmId) {
+        if (!confirm("تأكيد الطلب وخصم المخزون؟")) return;
+        await AlRabaaStore.confirmStoreOrder(confirmId);
+        await renderOrders();
+        toast("تم تأكيد الطلب وخصم المخزون");
+      }
+      if (cancelId) {
+        if (!confirm("إلغاء هذا الطلب؟")) return;
+        await AlRabaaStore.cancelStoreOrder(cancelId);
+        await renderOrders();
+        toast("تم إلغاء الطلب");
+      }
+      if (delId) {
+        if (!confirm("حذف الطلب؟")) return;
+        await AlRabaaStore.deleteStoreOrder(delId);
+        await renderOrders();
+        toast("تم الحذف");
+      }
+      if (waId) {
+        const o = await AlRabaaStore.getOrder(waId);
+        const lines = (o.items || []).map((i) => `• ${i.name} × ${i.qty} = ${money(i.total)} د.ك`).join("\n");
+        const text = `بخصوص طلب المتجر ${o.number}\n${o.customerName}\n${lines}\nالإجمالي: ${money(o.total)} د.ك`;
+        const phone = normalizePhone(o.phone) || WA;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
+      }
+    } catch (err) {
+      toast(err.message || "تعذر تنفيذ الإجراء");
+    }
+  });
 
   const invoicesBody = document.getElementById("invoices-body");
 

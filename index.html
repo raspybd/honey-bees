@@ -22,6 +22,9 @@
           <small>AL RABAA</small>
         </span>
       </a>
+      <button type="button" class="cart-chip" data-tab-link="shop" aria-label="السلة">
+        السلة <span data-cart-count hidden>0</span>
+      </button>
     </div>
   </header>
 
@@ -30,6 +33,7 @@
       <button type="button" class="side-tab active" data-tab="home">الرئيسية</button>
       <button type="button" class="side-tab" data-tab="why">لماذا الرباعية؟</button>
       <button type="button" class="side-tab" data-tab="products">المنتجات</button>
+      <button type="button" class="side-tab" data-tab="shop">المتجر</button>
       <button type="button" class="side-tab" data-tab="packages">الباقات</button>
       <button type="button" class="side-tab" data-tab="services">الخدمات</button>
       <button type="button" class="side-tab" data-tab="kids">للصغار</button>
@@ -137,7 +141,10 @@
           <div class="section-head">
             <p class="eyebrow">المنتجات</p>
             <h2>المنتجات والأسعار</h2>
-            <p>صناديق، طرود، شمع، عسل، عكبر، إطارات، بدلات ومزيد — اطلب عبر واتساب.</p>
+            <p>صناديق، طرود، شمع، عسل، عكبر، إطارات، بدلات ومزيد — اطلب من المتجر أو عبر واتساب.</p>
+          </div>
+          <div class="section-cta">
+            <button type="button" class="btn btn-gold" data-tab-link="shop">تسوق من المتجر</button>
           </div>
           <div class="product-grid">
             <article class="product">
@@ -215,7 +222,33 @@
           </div>
           <div class="section-cta">
             <p class="trust-line dark">يصل طلبك بعناية وأمان</p>
-            <a class="btn btn-gold" href="https://wa.me/96599787742" target="_blank" rel="noopener">اطلب عبر واتساب</a>
+            <button type="button" class="btn btn-gold" data-tab-link="shop">افتح المتجر والسلة</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-shop" class="tab-panel" data-panel="shop">
+        <div class="panel-pad">
+          <div class="section-head">
+            <p class="eyebrow">المتجر</p>
+            <h2>اطلب من المتجر</h2>
+            <p>أضف للسلة ثم أرسل الطلب — يوصلك واتساب مباشرة. الشحن يُحسب عند التواصل.</p>
+          </div>
+          <div class="shop-layout">
+            <div id="store-grid" class="store-grid"></div>
+            <aside class="cart-panel" aria-label="سلة التسوق">
+              <h3>السلة <span data-cart-count hidden>0</span></h3>
+              <p id="cart-empty" class="muted">السلة فارغة.</p>
+              <div id="cart-items" class="cart-items"></div>
+              <p class="cart-total">الإجمالي: <strong id="cart-total">0</strong> د.ك</p>
+              <form id="checkout-form" class="checkout-form">
+                <label>الاسم <input id="shop-name" required placeholder="اسمك" /></label>
+                <label>الجوال <input id="shop-phone" required placeholder="99787742" /></label>
+                <label>المنطقة / الدولة <input id="shop-area" placeholder="الكويت" /></label>
+                <label>ملاحظات <textarea id="shop-notes" rows="2" placeholder="اختياري"></textarea></label>
+                <button type="submit" class="btn btn-gold btn-lg">إرسال الطلب عبر واتساب</button>
+              </form>
+            </aside>
           </div>
         </div>
       </section>
@@ -618,6 +651,7 @@
   </script>
   <script src="js/pricing.js"></script>
   <script src="js/tabs.js"></script>
+  <script src="js/shop.js"></script>
   <script>
     (() => {
       const input = document.getElementById("svc-hives");

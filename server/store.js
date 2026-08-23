@@ -75,7 +75,9 @@ function empty() {
     purchases: [],
     expenses: [],
     cashEntries: [],
+    orders: [],
     purchaseSeq: 5000,
+    orderSeq: 7000,
     seq: 1000,
     catalog: defaultCatalog,
   };
@@ -106,6 +108,7 @@ function load() {
       purchases: Array.isArray(data.purchases) ? data.purchases : [],
       expenses: Array.isArray(data.expenses) ? data.expenses : [],
       cashEntries: Array.isArray(data.cashEntries) ? data.cashEntries : [],
+      orders: Array.isArray(data.orders) ? data.orders : [],
       catalog: Array.isArray(data.catalog) && data.catalog.length ? data.catalog : defaultCatalog,
     };
     if (needsProductSeed) save(merged);
@@ -819,8 +822,11 @@ function cashBalance() {
 function getReports() {
   const data = load();
   const paid = (data.invoices || []).filter((i) => i.status === "paid");
-  const salesTotal = roundQty(paid.reduce((s, i) => s + (Number(i.total) || 0), 0));
-  const cogsTotal = roundQty(
+  const confirmedOrders = (data.orders || []).filter((o) => o.status === "confirmed");
+  const salesInvoices = roundQty(paid.reduce((s, i) => s + (Number(i.total) || 0), 0));
+  const salesOrders = roundQty(confirmedOrders.reduce((s, o) => s + (Number(o.total) || 0), 0));
+  const salesTotal = roundQty(salesInvoices + salesOrders);
+  const cogsInvoices = roundQty(
     paid.reduce((s, i) => {
       if (i.cogs != null) return s + (Number(i.cogs) || 0);
       return (
@@ -829,6 +835,8 @@ function getReports() {
       );
     }, 0)
   );
+  const cogsOrders = roundQty(confirmedOrders.reduce((s, o) => s + (Number(o.cogs) || 0), 0));
+  const cogsTotal = roundQty(cogsInvoices + cogsOrders);
   const purchasesTotal = roundQty((data.purchases || []).reduce((s, p) => s + (Number(p.total) || 0), 0));
   const expensesTotal = roundQty((data.expenses || []).reduce((s, e) => s + (Number(e.amount) || 0), 0));
   const cashIn = roundQty((data.cashEntries || []).filter((c) => c.type === "in").reduce((s, c) => s + (Number(c.amount) || 0), 0));
@@ -844,6 +852,8 @@ function getReports() {
 
   return {
     salesTotal,
+    salesInvoices,
+    salesOrders,
     cogsTotal,
     purchasesTotal,
     expensesTotal,
@@ -855,10 +865,222 @@ function getReports() {
     stockValue,
     paidInvoicesCount: paid.length,
     openInvoicesCount: (data.invoices || []).filter((i) => i.status === "issued").length,
+    newOrdersCount: (data.orders || []).filter((o) => o.status === "new").length,
     productsCount: (data.products || []).length,
     lowStockCount: lowStock.length,
     lowStock: lowStock.map((p) => ({ id: p.id, name: p.name, qty: p.qty, unit: p.unit, minQty: p.minQty })),
   };
+}
+
+const PRODUCT_IMAGES = {
+  "hive-boxes": "assets/products/hive-boxes.jpg",
+  "bee-package": "assets/products/bee-package.jpg",
+  queen: "assets/products/queen.jpg",
+  honey: "assets/products/honey.jpg",
+  beeswax: "assets/products/beeswax.jpg",
+  propolis: "assets/products/propolis.jpg",
+  frames: "assets/products/frames.jpg",
+  suit: "assets/products/suit.jpg",
+  smoker: "assets/products/smoker.jpg",
+};
+
+function getStoreCatalog() {
+  return listProducts()
+    .filter((p) => p.published)
+    .map((p) => {
+      const available = p.trackStock ? roundQty(p.qty) : null;
+      return {
+        id: p.id,
+        name: p.name,
+        unit: p.unit,
+        price: roundQty(p.sellPrice),
+        trackStock: Boolean(p.trackStock),
+        available,
+        inStock: true,
+        image: PRODUCT_IMAGES[p.id] || "assets/logo.svg",
+      };
+    });
+}
+
+function nextOrderNumber(data) {
+  data.orderSeq = (data.orderSeq || 7000) + 1;
+  const y = new Date().getFullYear();
+  return `ORD-${y}-${String(data.orderSeq).padStart(4, "0")}`;
+}
+
+function listOrders() {
+  return (load().orders || []).slice().sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+}
+
+function getOrder(id) {
+  return (load().orders || []).find((o) => o.id === id) || null;
+}
+
+function createStoreOrder(input) {
+  const data = load();
+  if (!Array.isArray(data.orders)) data.orders = [];
+  const name = String(input.customerName || "").trim();
+  const phone = String(input.phone || "").trim();
+  if (!name) throw new Error("الاسم مطلوب");
+  if (!phone) throw new Error("رقم الجوال مطلوب");
+
+  const rawItems = Array.isArray(input.items) ? input.items : [];
+  if (!rawItems.length) throw new Error("السلة فارغة");
+
+  const items = [];
+  for (const row of rawItems) {
+    const product = data.products.find((p) => p.id === row.productId);
+    if (!product || !product.published) throw new Error("أحد الأصناف غير متاح في المتجر");
+    const qty = roundQty(row.qty);
+    if (qty <= 0) throw new Error("كمية غير صالحة");
+    const price = roundQty(product.sellPrice);
+    items.push({
+      productId: product.id,
+      name: product.name,
+      unit: product.unit,
+      qty,
+      price,
+      total: roundQty(qty * price),
+    });
+  }
+
+  const now = new Date().toISOString();
+  const order = {
+    id: uid("ord"),
+    number: nextOrderNumber(data),
+    status: "new",
+    customerName: name,
+    phone,
+    area: String(input.area || "").trim(),
+    notes: String(input.notes || "").trim(),
+    items,
+    total: roundQty(items.reduce((s, i) => s + i.total, 0)),
+    stockDeducted: false,
+    createdAt: now,
+  };
+  data.orders.unshift(order);
+  save(data);
+  return order;
+}
+
+function confirmStoreOrder(id) {
+  const data = load();
+  const order = (data.orders || []).find((o) => o.id === id);
+  if (!order) throw new Error("الطلب غير موجود");
+  if (order.status === "cancelled") throw new Error("الطلب ملغى");
+  if (order.stockDeducted) {
+    order.status = "confirmed";
+    order.updatedAt = new Date().toISOString();
+    save(data);
+    return order;
+  }
+
+  const needs = [];
+  for (const item of order.items || []) {
+    const product = data.products.find((p) => p.id === item.productId);
+    if (!product) throw new Error(`الصنف غير موجود: ${item.name}`);
+    if (!product.trackStock) {
+      item.costPrice = roundQty(product.costPrice);
+      item.costTotal = roundQty(item.qty * item.costPrice);
+      continue;
+    }
+    const need = roundQty(item.qty);
+    if (roundQty(product.qty) < need) {
+      throw new Error(
+        `المخزون غير كافٍ للصنف «${product.name}» (المتاح: ${roundQty(product.qty)}، المطلوب: ${need})`
+      );
+    }
+    needs.push({ product, need, item });
+  }
+
+  const now = new Date().toISOString();
+  if (!Array.isArray(data.stockMovements)) data.stockMovements = [];
+  let cogs = 0;
+  for (const { product, need, item } of needs) {
+    const before = roundQty(product.qty);
+    const after = roundQty(before - need);
+    const unitCost = roundQty(product.costPrice);
+    product.qty = after;
+    product.updatedAt = now;
+    item.costPrice = unitCost;
+    item.costTotal = roundQty(need * unitCost);
+    cogs = roundQty(cogs + item.costTotal);
+    data.stockMovements.unshift({
+      id: uid("stk"),
+      productId: product.id,
+      productName: product.name,
+      type: "sale",
+      qty: -need,
+      qtyBefore: before,
+      qtyAfter: after,
+      refType: "order",
+      refId: order.id,
+      refLabel: order.number,
+      note: item.name || "",
+      createdAt: now,
+    });
+  }
+  order.cogs = roundQty((order.items || []).reduce((s, it) => s + (Number(it.costTotal) || 0), 0));
+  order.stockDeducted = true;
+  order.status = "confirmed";
+  order.confirmedAt = now;
+  order.updatedAt = now;
+
+  if (!Array.isArray(data.cashEntries)) data.cashEntries = [];
+  const alreadyCash = data.cashEntries.some((c) => c.refType === "order" && c.refId === order.id);
+  if (!alreadyCash && roundQty(order.total) > 0) {
+    data.cashEntries.unshift({
+      id: uid("cash"),
+      date: now.slice(0, 10),
+      type: "in",
+      amount: roundQty(order.total),
+      category: "مبيعات متجر",
+      note: `طلب ${order.number} — ${order.customerName}`,
+      refType: "order",
+      refId: order.id,
+      createdAt: now,
+    });
+  }
+
+  // upsert customer by phone if possible
+  const phoneDigits = String(order.phone || "").replace(/\D/g, "");
+  let customer = data.customers.find((c) => String(c.phone || "").replace(/\D/g, "") === phoneDigits);
+  if (!customer) {
+    customer = {
+      id: uid("cus"),
+      name: order.customerName,
+      phone: order.phone,
+      area: order.area || "",
+      notes: `من طلب متجر ${order.number}`,
+      createdAt: now,
+      updatedAt: now,
+    };
+    data.customers.unshift(customer);
+  }
+  order.customerId = customer.id;
+
+  save(data);
+  return order;
+}
+
+function cancelStoreOrder(id) {
+  const data = load();
+  const order = (data.orders || []).find((o) => o.id === id);
+  if (!order) throw new Error("الطلب غير موجود");
+  if (order.stockDeducted) throw new Error("لا يمكن إلغاء طلب خُصم مخزونه — راجع المخزون يدويًا إن لزم");
+  order.status = "cancelled";
+  order.updatedAt = new Date().toISOString();
+  save(data);
+  return order;
+}
+
+function deleteStoreOrder(id) {
+  const data = load();
+  const order = (data.orders || []).find((o) => o.id === id);
+  if (!order) throw new Error("الطلب غير موجود");
+  if (order.stockDeducted) throw new Error("لا يمكن حذف طلب مؤكد ومخصوم من المخزون");
+  data.orders = data.orders.filter((o) => o.id !== id);
+  save(data);
 }
 
 function exportBackup() {
@@ -881,6 +1103,7 @@ function importBackup(parsed) {
     purchases: Array.isArray(parsed.purchases) ? parsed.purchases : [],
     expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
     cashEntries: Array.isArray(parsed.cashEntries) ? parsed.cashEntries : [],
+    orders: Array.isArray(parsed.orders) ? parsed.orders : [],
     catalog: Array.isArray(parsed.catalog) && parsed.catalog.length ? parsed.catalog : defaultCatalog,
   });
   return load();
@@ -916,6 +1139,13 @@ module.exports = {
   deleteCashEntry,
   cashBalance,
   getReports,
+  getStoreCatalog,
+  listOrders,
+  getOrder,
+  createStoreOrder,
+  confirmStoreOrder,
+  cancelStoreOrder,
+  deleteStoreOrder,
   listSupervisions,
   getSupervision,
   upsertSupervision,

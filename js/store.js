@@ -121,6 +121,11 @@ const AlRabaaStore = (() => {
     createCashEntry: (input) => api("/cash", { method: "POST", body: input }),
     deleteCashEntry: (id) => api(`/cash/${encodeURIComponent(id)}`, { method: "DELETE" }),
     getReports: () => api("/reports"),
+    listOrders: () => api("/orders"),
+    getOrder: (id) => api(`/orders/${encodeURIComponent(id)}`),
+    confirmStoreOrder: (id) => api(`/orders/${encodeURIComponent(id)}/confirm`, { method: "POST", body: {} }),
+    cancelStoreOrder: (id) => api(`/orders/${encodeURIComponent(id)}/cancel`, { method: "POST", body: {} }),
+    deleteStoreOrder: (id) => api(`/orders/${encodeURIComponent(id)}`, { method: "DELETE" }),
     exportBackup: async () => JSON.stringify(await api("/backup"), null, 2),
     importBackup: async (jsonText) => {
       const parsed = typeof jsonText === "string" ? JSON.parse(jsonText) : jsonText;
