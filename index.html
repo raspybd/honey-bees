@@ -542,10 +542,10 @@
       <p class="cart-total">الإجمالي: <strong id="cart-total">0</strong> د.ك</p>
       <p class="muted cart-ship-note">الشحن يُحسب عند التواصل.</p>
       <form id="checkout-form" class="checkout-form">
-        <label>الاسم <input id="shop-name" required placeholder="اسمك" /></label>
-        <label>الجوال <input id="shop-phone" required placeholder="99787742" /></label>
-        <label>المنطقة / الدولة <input id="shop-area" placeholder="الكويت" /></label>
-        <label>ملاحظات <textarea id="shop-notes" rows="2" placeholder="اختياري"></textarea></label>
+        <label>الاسم <input id="shop-name" required autocomplete="name" /></label>
+        <label>الجوال <input id="shop-phone" required autocomplete="tel" inputmode="tel" /></label>
+        <label>المنطقة / الدولة <input id="shop-area" autocomplete="address-level1" /></label>
+        <label>ملاحظات <textarea id="shop-notes" rows="2"></textarea></label>
         <button type="submit" class="btn btn-gold btn-lg">إرسال الطلب عبر واتساب</button>
       </form>
     </aside>
