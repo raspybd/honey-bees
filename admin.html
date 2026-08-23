@@ -42,6 +42,10 @@
     <aside class="admin-side-tabs" aria-label="أقسام الإدارة">
       <button type="button" class="side-tab active" data-tab="customers">سجل العملاء</button>
       <button type="button" class="side-tab" data-tab="products">الأصناف والمخزون</button>
+      <button type="button" class="side-tab" data-tab="purchases">المشتريات</button>
+      <button type="button" class="side-tab" data-tab="expenses">المصروفات</button>
+      <button type="button" class="side-tab" data-tab="cash">الصندوق</button>
+      <button type="button" class="side-tab" data-tab="reports">التقارير</button>
       <button type="button" class="side-tab" data-tab="supervision">متابعة الإشراف</button>
       <button type="button" class="side-tab" data-tab="invoices">الفواتير</button>
       <button type="button" class="side-tab" data-tab="create">فاتورة جديدة</button>
@@ -348,6 +352,163 @@
             </tr>
           </thead>
           <tbody id="supervision-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-purchases" class="panel">
+      <div class="panel-head">
+        <div>
+          <h1>المشتريات</h1>
+          <p>تسجيل شراء بضاعة: يزيد المخزون ويحدّث التكلفة، ويُسجَّل صرفًا في الصندوق إن كان مدفوعًا.</p>
+        </div>
+        <button type="button" class="btn btn-gold" id="btn-new-purchase">شراء جديد</button>
+      </div>
+      <form id="purchase-form" class="card form-card hidden">
+        <div class="form-grid">
+          <label>المورد <input id="purchase-supplier" required placeholder="اسم المورد" /></label>
+          <label>التاريخ <input id="purchase-date" type="date" required /></label>
+          <label class="check-label"><input type="checkbox" id="purchase-paid" checked /> مدفوع (خصم من الصندوق)</label>
+          <label class="full">ملاحظات <input id="purchase-notes" placeholder="اختياري" /></label>
+        </div>
+        <div class="items-head">
+          <h2>بنود الشراء</h2>
+          <button type="button" class="btn btn-dark" id="btn-add-purchase-item">إضافة بند</button>
+        </div>
+        <div id="purchase-items" class="items-list"></div>
+        <p class="invoice-total">الإجمالي: <strong id="purchase-total">0</strong> د.ك</p>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-dark">حفظ الشراء</button>
+          <button type="button" class="btn btn-ghost-dark" id="btn-cancel-purchase">إلغاء</button>
+        </div>
+      </form>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>الرقم</th>
+              <th>المورد</th>
+              <th>التاريخ</th>
+              <th>المبلغ</th>
+              <th>الدفع</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="purchases-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-expenses" class="panel">
+      <div class="panel-head">
+        <div>
+          <h1>المصروفات</h1>
+          <p>تسجيل مصروفات التشغيل (نقل، إيجار، عمالة…) وتُخصم تلقائيًا من الصندوق.</p>
+        </div>
+        <button type="button" class="btn btn-gold" id="btn-new-expense">مصروف جديد</button>
+      </div>
+      <form id="expense-form" class="card form-card hidden">
+        <div class="form-grid">
+          <label>التاريخ <input id="expense-date" type="date" required /></label>
+          <label>التصنيف
+            <select id="expense-category">
+              <option>نقل وتوصيل</option>
+              <option>تغذية النحل</option>
+              <option>عمالة</option>
+              <option>إيجار</option>
+              <option>صيانة</option>
+              <option>عام</option>
+            </select>
+          </label>
+          <label>المبلغ (د.ك) <input id="expense-amount" type="number" min="0.001" step="0.001" required /></label>
+          <label class="full">ملاحظة <input id="expense-note" placeholder="اختياري" /></label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-dark">حفظ المصروف</button>
+          <button type="button" class="btn btn-ghost-dark" id="btn-cancel-expense">إلغاء</button>
+        </div>
+      </form>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>التصنيف</th>
+              <th>المبلغ</th>
+              <th>ملاحظة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="expenses-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-cash" class="panel">
+      <div class="panel-head">
+        <div>
+          <h1>الصندوق</h1>
+          <p>حركات القبض والصرف. رصيد الصندوق يتحدث تلقائيًا من المبيعات والمشتريات والمصروفات.</p>
+        </div>
+        <button type="button" class="btn btn-gold" id="btn-new-cash">حركة يدوية</button>
+      </div>
+      <div id="cash-balance-card" class="stat-grid">
+        <article class="stat-card"><span>رصيد الصندوق</span><strong id="cash-balance">0</strong></article>
+      </div>
+      <form id="cash-form" class="card form-card hidden">
+        <div class="form-grid">
+          <label>النوع
+            <select id="cash-type">
+              <option value="in">قبض</option>
+              <option value="out">صرف</option>
+            </select>
+          </label>
+          <label>التاريخ <input id="cash-date" type="date" required /></label>
+          <label>المبلغ (د.ك) <input id="cash-amount" type="number" min="0.001" step="0.001" required /></label>
+          <label>التصنيف <input id="cash-category" placeholder="مثل: رأس مال / سحب" /></label>
+          <label class="full">ملاحظة <input id="cash-note" /></label>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-dark">حفظ الحركة</button>
+          <button type="button" class="btn btn-ghost-dark" id="btn-cancel-cash">إلغاء</button>
+        </div>
+      </form>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>التاريخ</th>
+              <th>النوع</th>
+              <th>التصنيف</th>
+              <th>المبلغ</th>
+              <th>ملاحظة</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="cash-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="panel-reports" class="panel">
+      <div class="panel-head">
+        <div>
+          <h1>التقارير</h1>
+          <p>ملخص مبسّط: مبيعات، تكلفة البضاعة المباعة، مصروفات، وربح تقريبي.</p>
+        </div>
+        <button type="button" class="btn btn-dark" id="btn-refresh-reports">تحديث</button>
+      </div>
+      <div id="reports-grid" class="stat-grid"></div>
+      <div class="table-wrap" style="margin-top:1.2rem">
+        <table>
+          <thead>
+            <tr>
+              <th>أصناف منخفضة المخزون</th>
+              <th>الكمية</th>
+              <th>حد التنبيه</th>
+            </tr>
+          </thead>
+          <tbody id="reports-low-body"></tbody>
         </table>
       </div>
     </section>

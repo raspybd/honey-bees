@@ -95,6 +95,42 @@ app.get("/api/stock-movements", requireAuth, (req, res) =>
   handle(res, () => store.listStockMovements(req.query.limit))
 );
 
+app.get("/api/purchases", requireAuth, (_req, res) => handle(res, () => store.listPurchases()));
+app.get("/api/purchases/:id", requireAuth, (req, res) => {
+  const item = store.getPurchase(req.params.id);
+  if (!item) return res.status(404).json({ error: "فاتورة الشراء غير موجودة" });
+  res.json(item);
+});
+app.post("/api/purchases", requireAuth, (req, res) => handle(res, () => store.createPurchase(req.body || {})));
+app.delete("/api/purchases/:id", requireAuth, (req, res) =>
+  handle(res, () => {
+    store.deletePurchase(req.params.id);
+    return { ok: true };
+  })
+);
+
+app.get("/api/expenses", requireAuth, (_req, res) => handle(res, () => store.listExpenses()));
+app.post("/api/expenses", requireAuth, (req, res) => handle(res, () => store.createExpense(req.body || {})));
+app.delete("/api/expenses/:id", requireAuth, (req, res) =>
+  handle(res, () => {
+    store.deleteExpense(req.params.id);
+    return { ok: true };
+  })
+);
+
+app.get("/api/cash", requireAuth, (_req, res) =>
+  handle(res, () => ({ entries: store.listCashEntries(), balance: store.cashBalance() }))
+);
+app.post("/api/cash", requireAuth, (req, res) => handle(res, () => store.createCashEntry(req.body || {})));
+app.delete("/api/cash/:id", requireAuth, (req, res) =>
+  handle(res, () => {
+    store.deleteCashEntry(req.params.id);
+    return { ok: true };
+  })
+);
+
+app.get("/api/reports", requireAuth, (_req, res) => handle(res, () => store.getReports()));
+
 app.get("/api/customers", requireAuth, (_req, res) => handle(res, () => store.listCustomers()));
 app.get("/api/customers/:id", requireAuth, (req, res) => {
   const item = store.getCustomer(req.params.id);

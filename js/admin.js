@@ -29,6 +29,10 @@
     document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === `panel-${name}`));
     if (name === "customers") await renderCustomers();
     if (name === "products") await renderProducts();
+    if (name === "purchases") await renderPurchases();
+    if (name === "expenses") await renderExpenses();
+    if (name === "cash") await renderCash();
+    if (name === "reports") await renderReports();
     if (name === "invoices") await renderInvoices();
     if (name === "create") await prepareInvoiceForm();
     if (name === "supervision") await renderSupervisions();
@@ -306,6 +310,302 @@
       toast(err.message || "تعذر تنفيذ الإجراء");
     }
   });
+
+  const purchaseForm = document.getElementById("purchase-form");
+  const purchaseItemsEl = document.getElementById("purchase-items");
+  const purchasesBody = document.getElementById("purchases-body");
+  let purchaseProductsCache = [];
+
+  function resetPurchaseForm() {
+    purchaseForm.reset();
+    document.getElementById("purchase-paid").checked = true;
+    document.getElementById("purchase-date").value = new Date().toISOString().slice(0, 10);
+    purchaseItemsEl.innerHTML = "";
+    purchaseForm.classList.add("hidden");
+  }
+
+  function addPurchaseItemRow() {
+    const options = purchaseProductsCache
+      .filter((p) => p.trackStock !== false)
+      .map(
+        (p) =>
+          `<option value="${p.id}" data-cost="${p.costPrice || 0}">${escapeHtml(p.name)} — تكلفة ${money(p.costPrice)} · متاح ${money(p.qty)}</option>`
+      )
+      .join("");
+    const row = document.createElement("div");
+    row.className = "item-row";
+    row.innerHTML = `
+      <select class="pur-product" required>
+        <option value="">اختر صنفًا</option>
+        ${options}
+      </select>
+      <input class="pur-qty" type="number" min="0.001" step="0.001" value="1" required />
+      <input class="pur-cost" type="number" min="0" step="0.001" placeholder="تكلفة الوحدة" required />
+      <span class="pur-line-total muted">0</span>
+      <button type="button" class="danger remove-pur-item">حذف</button>
+    `;
+    purchaseItemsEl.appendChild(row);
+  }
+
+  function updatePurchaseTotal() {
+    let total = 0;
+    purchaseItemsEl.querySelectorAll(".item-row").forEach((row) => {
+      const qty = Number(row.querySelector(".pur-qty").value) || 0;
+      const cost = Number(row.querySelector(".pur-cost").value) || 0;
+      const line = qty * cost;
+      total += line;
+      row.querySelector(".pur-line-total").textContent = money(line);
+    });
+    document.getElementById("purchase-total").textContent = money(total);
+  }
+
+  document.getElementById("btn-new-purchase").addEventListener("click", async () => {
+    purchaseProductsCache = await AlRabaaStore.listProducts();
+    resetPurchaseForm();
+    purchaseForm.classList.remove("hidden");
+    addPurchaseItemRow();
+    updatePurchaseTotal();
+  });
+  document.getElementById("btn-cancel-purchase").addEventListener("click", resetPurchaseForm);
+  document.getElementById("btn-add-purchase-item").addEventListener("click", () => {
+    addPurchaseItemRow();
+    updatePurchaseTotal();
+  });
+  purchaseItemsEl.addEventListener("change", (e) => {
+    if (e.target.classList.contains("pur-product") && e.target.value) {
+      const opt = e.target.selectedOptions[0];
+      e.target.closest(".item-row").querySelector(".pur-cost").value = opt.dataset.cost || 0;
+      updatePurchaseTotal();
+    }
+  });
+  purchaseItemsEl.addEventListener("input", (e) => {
+    if (e.target.classList.contains("pur-qty") || e.target.classList.contains("pur-cost")) updatePurchaseTotal();
+  });
+  purchaseItemsEl.addEventListener("click", (e) => {
+    if (e.target.classList.contains("remove-pur-item")) {
+      e.target.closest(".item-row").remove();
+      if (!purchaseItemsEl.children.length) addPurchaseItemRow();
+      updatePurchaseTotal();
+    }
+  });
+
+  purchaseForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      const items = [...purchaseItemsEl.querySelectorAll(".item-row")].map((row) => ({
+        productId: row.querySelector(".pur-product").value,
+        qty: row.querySelector(".pur-qty").value,
+        cost: row.querySelector(".pur-cost").value,
+      }));
+      await AlRabaaStore.createPurchase({
+        supplierName: document.getElementById("purchase-supplier").value,
+        date: document.getElementById("purchase-date").value,
+        paid: document.getElementById("purchase-paid").checked,
+        notes: document.getElementById("purchase-notes").value,
+        items,
+      });
+      resetPurchaseForm();
+      await renderPurchases();
+      toast("تم حفظ الشراء وتحديث المخزون");
+    } catch (err) {
+      toast(err.message || "تعذر الحفظ");
+    }
+  });
+
+  async function renderPurchases() {
+    const rows = await AlRabaaStore.listPurchases();
+    purchasesBody.innerHTML = rows.length
+      ? rows
+          .map(
+            (p) => `
+      <tr>
+        <td><strong>${escapeHtml(p.number)}</strong></td>
+        <td>${escapeHtml(p.supplierName)}</td>
+        <td>${escapeHtml(p.date)}</td>
+        <td>${money(p.total)} د.ك</td>
+        <td>${p.paid ? `<span class="badge paid">مدفوع</span>` : `<span class="badge">آجل</span>`}</td>
+        <td class="actions">
+          <button type="button" data-del-purchase="${p.id}" class="danger">حذف</button>
+        </td>
+      </tr>`
+          )
+          .join("")
+      : `<tr><td colspan="6" class="empty">لا مشتريات بعد.</td></tr>`;
+  }
+
+  purchasesBody.addEventListener("click", async (e) => {
+    const id = e.target.getAttribute("data-del-purchase");
+    if (!id) return;
+    if (!confirm("حذف فاتورة الشراء وعكس الكميات من المخزون؟")) return;
+    try {
+      await AlRabaaStore.deletePurchase(id);
+      await renderPurchases();
+      toast("تم حذف الشراء");
+    } catch (err) {
+      toast(err.message || "تعذر الحذف");
+    }
+  });
+
+  const expenseForm = document.getElementById("expense-form");
+  const expensesBody = document.getElementById("expenses-body");
+
+  function resetExpenseForm() {
+    expenseForm.reset();
+    document.getElementById("expense-date").value = new Date().toISOString().slice(0, 10);
+    expenseForm.classList.add("hidden");
+  }
+
+  document.getElementById("btn-new-expense").addEventListener("click", () => {
+    resetExpenseForm();
+    expenseForm.classList.remove("hidden");
+  });
+  document.getElementById("btn-cancel-expense").addEventListener("click", resetExpenseForm);
+
+  expenseForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await AlRabaaStore.createExpense({
+        date: document.getElementById("expense-date").value,
+        category: document.getElementById("expense-category").value,
+        amount: document.getElementById("expense-amount").value,
+        note: document.getElementById("expense-note").value,
+      });
+      resetExpenseForm();
+      await renderExpenses();
+      toast("تم حفظ المصروف");
+    } catch (err) {
+      toast(err.message || "تعذر الحفظ");
+    }
+  });
+
+  async function renderExpenses() {
+    const rows = await AlRabaaStore.listExpenses();
+    expensesBody.innerHTML = rows.length
+      ? rows
+          .map(
+            (x) => `
+      <tr>
+        <td>${escapeHtml(x.date)}</td>
+        <td>${escapeHtml(x.category)}</td>
+        <td>${money(x.amount)} د.ك</td>
+        <td>${escapeHtml(x.note || "")}</td>
+        <td class="actions"><button type="button" data-del-expense="${x.id}" class="danger">حذف</button></td>
+      </tr>`
+          )
+          .join("")
+      : `<tr><td colspan="5" class="empty">لا مصروفات بعد.</td></tr>`;
+  }
+
+  expensesBody.addEventListener("click", async (e) => {
+    const id = e.target.getAttribute("data-del-expense");
+    if (!id) return;
+    if (!confirm("حذف هذا المصروف؟")) return;
+    try {
+      await AlRabaaStore.deleteExpense(id);
+      await renderExpenses();
+      toast("تم الحذف");
+    } catch (err) {
+      toast(err.message || "تعذر الحذف");
+    }
+  });
+
+  const cashForm = document.getElementById("cash-form");
+  const cashBody = document.getElementById("cash-body");
+
+  function resetCashForm() {
+    cashForm.reset();
+    document.getElementById("cash-date").value = new Date().toISOString().slice(0, 10);
+    cashForm.classList.add("hidden");
+  }
+
+  document.getElementById("btn-new-cash").addEventListener("click", () => {
+    resetCashForm();
+    cashForm.classList.remove("hidden");
+  });
+  document.getElementById("btn-cancel-cash").addEventListener("click", resetCashForm);
+
+  cashForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await AlRabaaStore.createCashEntry({
+        type: document.getElementById("cash-type").value,
+        date: document.getElementById("cash-date").value,
+        amount: document.getElementById("cash-amount").value,
+        category: document.getElementById("cash-category").value,
+        note: document.getElementById("cash-note").value,
+      });
+      resetCashForm();
+      await renderCash();
+      toast("تم حفظ حركة الصندوق");
+    } catch (err) {
+      toast(err.message || "تعذر الحفظ");
+    }
+  });
+
+  async function renderCash() {
+    const data = await AlRabaaStore.getCash();
+    document.getElementById("cash-balance").textContent = `${money(data.balance)} د.ك`;
+    cashBody.innerHTML = data.entries.length
+      ? data.entries
+          .map(
+            (c) => `
+      <tr>
+        <td>${escapeHtml(c.date)}</td>
+        <td>${c.type === "in" ? `<span class="badge paid">قبض</span>` : `<span class="badge cancelled">صرف</span>`}</td>
+        <td>${escapeHtml(c.category || "")}</td>
+        <td>${money(c.amount)} د.ك</td>
+        <td>${escapeHtml(c.note || "")}</td>
+        <td class="actions">
+          ${c.refType === "manual" ? `<button type="button" data-del-cash="${c.id}" class="danger">حذف</button>` : `<span class="muted">${escapeHtml(c.refType)}</span>`}
+        </td>
+      </tr>`
+          )
+          .join("")
+      : `<tr><td colspan="6" class="empty">لا حركات صندوق بعد.</td></tr>`;
+  }
+
+  cashBody.addEventListener("click", async (e) => {
+    const id = e.target.getAttribute("data-del-cash");
+    if (!id) return;
+    if (!confirm("حذف حركة الصندوق اليدوية؟")) return;
+    try {
+      await AlRabaaStore.deleteCashEntry(id);
+      await renderCash();
+      toast("تم الحذف");
+    } catch (err) {
+      toast(err.message || "تعذر الحذف");
+    }
+  });
+
+  document.getElementById("btn-refresh-reports").addEventListener("click", () => renderReports());
+
+  async function renderReports() {
+    const r = await AlRabaaStore.getReports();
+    document.getElementById("reports-grid").innerHTML = `
+      <article class="stat-card"><span>المبيعات المؤكدة</span><strong>${money(r.salesTotal)} د.ك</strong></article>
+      <article class="stat-card"><span>تكلفة البضاعة المباعة</span><strong>${money(r.cogsTotal)} د.ك</strong></article>
+      <article class="stat-card"><span>مجمل الربح</span><strong>${money(r.grossProfit)} د.ك</strong></article>
+      <article class="stat-card"><span>المصروفات</span><strong>${money(r.expensesTotal)} د.ك</strong></article>
+      <article class="stat-card highlight"><span>صافي ربح تقريبي</span><strong>${money(r.netProfit)} د.ك</strong></article>
+      <article class="stat-card"><span>المشتريات</span><strong>${money(r.purchasesTotal)} د.ك</strong></article>
+      <article class="stat-card"><span>رصيد الصندوق</span><strong>${money(r.cashBalance)} د.ك</strong></article>
+      <article class="stat-card"><span>قيمة المخزون (بالتكلفة)</span><strong>${money(r.stockValue)} د.ك</strong></article>
+      <article class="stat-card"><span>فواتير مؤكدة / بانتظار</span><strong>${r.paidInvoicesCount} / ${r.openInvoicesCount}</strong></article>
+    `;
+    const low = r.lowStock || [];
+    document.getElementById("reports-low-body").innerHTML = low.length
+      ? low
+          .map(
+            (p) => `
+      <tr class="row-alert">
+        <td>${escapeHtml(p.name)}</td>
+        <td>${money(p.qty)} ${escapeHtml(p.unit || "")}</td>
+        <td>${money(p.minQty)}</td>
+      </tr>`
+          )
+          .join("")
+      : `<tr><td colspan="3" class="empty">لا أصناف منخفضة حاليًا.</td></tr>`;
+  }
 
   const invoicesBody = document.getElementById("invoices-body");
 

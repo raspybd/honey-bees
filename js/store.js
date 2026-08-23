@@ -110,6 +110,17 @@ const AlRabaaStore = (() => {
     listStockMovements: (limit) => api(`/stock-movements${limit ? `?limit=${limit}` : ""}`),
     lowStockProducts: () => api("/products/low-stock"),
     confirmInvoiceSale: (id) => api(`/invoices/${encodeURIComponent(id)}/confirm`, { method: "POST", body: {} }),
+    listPurchases: () => api("/purchases"),
+    getPurchase: (id) => api(`/purchases/${encodeURIComponent(id)}`),
+    createPurchase: (input) => api("/purchases", { method: "POST", body: input }),
+    deletePurchase: (id) => api(`/purchases/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    listExpenses: () => api("/expenses"),
+    createExpense: (input) => api("/expenses", { method: "POST", body: input }),
+    deleteExpense: (id) => api(`/expenses/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    getCash: () => api("/cash"),
+    createCashEntry: (input) => api("/cash", { method: "POST", body: input }),
+    deleteCashEntry: (id) => api(`/cash/${encodeURIComponent(id)}`, { method: "DELETE" }),
+    getReports: () => api("/reports"),
     exportBackup: async () => JSON.stringify(await api("/backup"), null, 2),
     importBackup: async (jsonText) => {
       const parsed = typeof jsonText === "string" ? JSON.parse(jsonText) : jsonText;

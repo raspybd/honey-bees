@@ -72,6 +72,10 @@ function empty() {
     supervisions: [],
     products: seedProductsFromCatalog(),
     stockMovements: [],
+    purchases: [],
+    expenses: [],
+    cashEntries: [],
+    purchaseSeq: 5000,
     seq: 1000,
     catalog: defaultCatalog,
   };
@@ -99,6 +103,9 @@ function load() {
       supervisions: Array.isArray(data.supervisions) ? data.supervisions : [],
       products,
       stockMovements: Array.isArray(data.stockMovements) ? data.stockMovements : [],
+      purchases: Array.isArray(data.purchases) ? data.purchases : [],
+      expenses: Array.isArray(data.expenses) ? data.expenses : [],
+      cashEntries: Array.isArray(data.cashEntries) ? data.cashEntries : [],
       catalog: Array.isArray(data.catalog) && data.catalog.length ? data.catalog : defaultCatalog,
     };
     if (needsProductSeed) save(merged);
@@ -283,11 +290,16 @@ function confirmInvoiceSale(id) {
     }
     const now = new Date().toISOString();
     if (!Array.isArray(data.stockMovements)) data.stockMovements = [];
+    let cogs = 0;
     for (const { product, need, item } of needs) {
       const before = roundQty(product.qty);
       const after = roundQty(before - need);
+      const unitCost = roundQty(product.costPrice);
       product.qty = after;
       product.updatedAt = now;
+      item.costPrice = unitCost;
+      item.costTotal = roundQty(need * unitCost);
+      cogs = roundQty(cogs + item.costTotal);
       data.stockMovements.unshift({
         id: uid("stk"),
         productId: product.id,
@@ -303,8 +315,37 @@ function confirmInvoiceSale(id) {
         createdAt: now,
       });
     }
+    // snapshot cost also for non-tracked linked products / custom lines without stock
+    for (const item of inv.items || []) {
+      if (item.costTotal != null) continue;
+      if (item.productId) {
+        const product = data.products.find((p) => p.id === item.productId);
+        if (product) {
+          item.costPrice = roundQty(product.costPrice);
+          item.costTotal = roundQty((Number(item.qty) || 0) * item.costPrice);
+          cogs = roundQty(cogs + item.costTotal);
+        }
+      }
+    }
+    inv.cogs = cogs;
     inv.stockDeducted = true;
     inv.stockDeductedAt = now;
+
+    if (!Array.isArray(data.cashEntries)) data.cashEntries = [];
+    const alreadyCash = data.cashEntries.some((c) => c.refType === "invoice" && c.refId === inv.id);
+    if (!alreadyCash && roundQty(inv.total) > 0) {
+      data.cashEntries.unshift({
+        id: uid("cash"),
+        date: inv.date || now.slice(0, 10),
+        type: "in",
+        amount: roundQty(inv.total),
+        category: "مبيعات",
+        note: `فاتورة ${inv.number} — ${inv.customerName || ""}`,
+        refType: "invoice",
+        refId: inv.id,
+        createdAt: now,
+      });
+    }
   }
 
   inv.status = "paid";
@@ -556,6 +597,270 @@ function deleteSupervision(id) {
   save(data);
 }
 
+function nextPurchaseNumber(data) {
+  data.purchaseSeq = (data.purchaseSeq || 5000) + 1;
+  const y = new Date().getFullYear();
+  return `PUR-${y}-${String(data.purchaseSeq).padStart(4, "0")}`;
+}
+
+function pushCash(data, entry) {
+  if (!Array.isArray(data.cashEntries)) data.cashEntries = [];
+  data.cashEntries.unshift(entry);
+}
+
+function listPurchases() {
+  return (load().purchases || []).slice().sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+}
+
+function getPurchase(id) {
+  return (load().purchases || []).find((p) => p.id === id) || null;
+}
+
+function createPurchase(input) {
+  const data = load();
+  if (!Array.isArray(data.purchases)) data.purchases = [];
+  if (!Array.isArray(data.stockMovements)) data.stockMovements = [];
+  const now = new Date().toISOString();
+  const rawItems = Array.isArray(input.items) ? input.items : [];
+  const items = [];
+  for (const row of rawItems) {
+    const productId = String(row.productId || "").trim();
+    const product = data.products.find((p) => p.id === productId);
+    if (!product) throw new Error("اختر صنفًا صحيحًا لكل بند");
+    const qty = roundQty(row.qty);
+    const cost = roundQty(row.cost);
+    if (qty <= 0) throw new Error("كمية الشراء يجب أن تكون أكبر من صفر");
+    items.push({
+      productId: product.id,
+      name: product.name,
+      unit: product.unit,
+      qty,
+      cost,
+      total: roundQty(qty * cost),
+    });
+  }
+  if (!items.length) throw new Error("أضف بند شراء واحدًا على الأقل");
+
+  const purchaseId = uid("pur");
+  const purchaseNumber = nextPurchaseNumber(data);
+
+  for (const item of items) {
+    const product = data.products.find((p) => p.id === item.productId);
+    const before = roundQty(product.qty);
+    const after = roundQty(before + item.qty);
+    if (product.trackStock) {
+      if (before > 0) {
+        product.costPrice = roundQty((before * roundQty(product.costPrice) + item.qty * item.cost) / after);
+      } else {
+        product.costPrice = item.cost;
+      }
+      product.qty = after;
+    } else {
+      product.costPrice = item.cost;
+    }
+    product.updatedAt = now;
+    data.stockMovements.unshift({
+      id: uid("stk"),
+      productId: product.id,
+      productName: product.name,
+      type: "purchase",
+      qty: item.qty,
+      qtyBefore: before,
+      qtyAfter: product.trackStock ? after : before,
+      refType: "purchase",
+      refId: purchaseId,
+      refLabel: purchaseNumber,
+      note: `شراء @ ${item.cost} د.ك`,
+      createdAt: now,
+    });
+  }
+
+  const purchase = {
+    id: purchaseId,
+    number: purchaseNumber,
+    supplierName: String(input.supplierName || "").trim() || "مورد",
+    date: String(input.date || now.slice(0, 10)),
+    items,
+    total: roundQty(items.reduce((s, i) => s + i.total, 0)),
+    paid: input.paid !== false && input.paid !== "false",
+    notes: String(input.notes || "").trim(),
+    createdAt: now,
+  };
+
+  data.purchases.unshift(purchase);
+
+  if (purchase.paid && purchase.total > 0) {
+    pushCash(data, {
+      id: uid("cash"),
+      date: purchase.date,
+      type: "out",
+      amount: purchase.total,
+      category: "مشتريات",
+      note: `${purchase.number} — ${purchase.supplierName}`,
+      refType: "purchase",
+      refId: purchase.id,
+      createdAt: now,
+    });
+  }
+
+  save(data);
+  return purchase;
+}
+
+function deletePurchase(id) {
+  const data = load();
+  const purchase = (data.purchases || []).find((p) => p.id === id);
+  if (!purchase) throw new Error("فاتورة الشراء غير موجودة");
+
+  // reverse stock
+  for (const item of purchase.items || []) {
+    const product = data.products.find((p) => p.id === item.productId);
+    if (!product || !product.trackStock) continue;
+    const before = roundQty(product.qty);
+    const after = roundQty(before - roundQty(item.qty));
+    if (after < 0) {
+      throw new Error(`لا يمكن حذف الشراء: كمية «${product.name}» أصبحت غير كافية بعد البيع`);
+    }
+    product.qty = after;
+    product.updatedAt = new Date().toISOString();
+  }
+
+  data.purchases = data.purchases.filter((p) => p.id !== id);
+  data.stockMovements = (data.stockMovements || []).filter((m) => !(m.refType === "purchase" && m.refId === id));
+  data.cashEntries = (data.cashEntries || []).filter((c) => !(c.refType === "purchase" && c.refId === id));
+  save(data);
+}
+
+function listExpenses() {
+  return (load().expenses || []).slice().sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || "").localeCompare(a.createdAt || ""));
+}
+
+function createExpense(input) {
+  const data = load();
+  if (!Array.isArray(data.expenses)) data.expenses = [];
+  const amount = roundQty(input.amount);
+  if (amount <= 0) throw new Error("أدخل مبلغ المصروف");
+  const now = new Date().toISOString();
+  const expense = {
+    id: uid("exp"),
+    date: String(input.date || now.slice(0, 10)),
+    category: String(input.category || "عام").trim() || "عام",
+    amount,
+    note: String(input.note || "").trim(),
+    createdAt: now,
+  };
+  data.expenses.unshift(expense);
+  pushCash(data, {
+    id: uid("cash"),
+    date: expense.date,
+    type: "out",
+    amount: expense.amount,
+    category: expense.category,
+    note: expense.note || "مصروف",
+    refType: "expense",
+    refId: expense.id,
+    createdAt: now,
+  });
+  save(data);
+  return expense;
+}
+
+function deleteExpense(id) {
+  const data = load();
+  data.expenses = (data.expenses || []).filter((e) => e.id !== id);
+  data.cashEntries = (data.cashEntries || []).filter((c) => !(c.refType === "expense" && c.refId === id));
+  save(data);
+}
+
+function listCashEntries() {
+  return (load().cashEntries || []).slice().sort((a, b) => (b.date || "").localeCompare(a.date || "") || (b.createdAt || "").localeCompare(a.createdAt || ""));
+}
+
+function createCashEntry(input) {
+  const data = load();
+  const type = String(input.type || "").trim();
+  if (type !== "in" && type !== "out") throw new Error("نوع الحركة: قبض أو صرف");
+  const amount = roundQty(input.amount);
+  if (amount <= 0) throw new Error("أدخل مبلغًا صحيحًا");
+  const now = new Date().toISOString();
+  const entry = {
+    id: uid("cash"),
+    date: String(input.date || now.slice(0, 10)),
+    type,
+    amount,
+    category: String(input.category || (type === "in" ? "قبض" : "صرف")).trim(),
+    note: String(input.note || "").trim(),
+    refType: "manual",
+    refId: "",
+    createdAt: now,
+  };
+  pushCash(data, entry);
+  save(data);
+  return entry;
+}
+
+function deleteCashEntry(id) {
+  const data = load();
+  const entry = (data.cashEntries || []).find((c) => c.id === id);
+  if (!entry) throw new Error("الحركة غير موجودة");
+  if (entry.refType && entry.refType !== "manual") {
+    throw new Error("احذف السجل الأصلي (فاتورة / شراء / مصروف) بدل حذف حركة الصندوق المرتبطة");
+  }
+  data.cashEntries = data.cashEntries.filter((c) => c.id !== id);
+  save(data);
+}
+
+function cashBalance() {
+  return roundQty(
+    (load().cashEntries || []).reduce((s, e) => s + (e.type === "in" ? Number(e.amount) || 0 : -(Number(e.amount) || 0)), 0)
+  );
+}
+
+function getReports() {
+  const data = load();
+  const paid = (data.invoices || []).filter((i) => i.status === "paid");
+  const salesTotal = roundQty(paid.reduce((s, i) => s + (Number(i.total) || 0), 0));
+  const cogsTotal = roundQty(
+    paid.reduce((s, i) => {
+      if (i.cogs != null) return s + (Number(i.cogs) || 0);
+      return (
+        s +
+        (i.items || []).reduce((ss, it) => ss + (Number(it.costTotal) || (Number(it.qty) || 0) * (Number(it.costPrice) || 0)), 0)
+      );
+    }, 0)
+  );
+  const purchasesTotal = roundQty((data.purchases || []).reduce((s, p) => s + (Number(p.total) || 0), 0));
+  const expensesTotal = roundQty((data.expenses || []).reduce((s, e) => s + (Number(e.amount) || 0), 0));
+  const cashIn = roundQty((data.cashEntries || []).filter((c) => c.type === "in").reduce((s, c) => s + (Number(c.amount) || 0), 0));
+  const cashOut = roundQty((data.cashEntries || []).filter((c) => c.type === "out").reduce((s, c) => s + (Number(c.amount) || 0), 0));
+  const stockValue = roundQty(
+    (data.products || [])
+      .filter((p) => p.trackStock)
+      .reduce((s, p) => s + roundQty(p.qty) * roundQty(p.costPrice), 0)
+  );
+  const lowStock = (data.products || []).filter((p) => p.trackStock && roundQty(p.qty) <= roundQty(p.minQty));
+  const grossProfit = roundQty(salesTotal - cogsTotal);
+  const netProfit = roundQty(grossProfit - expensesTotal);
+
+  return {
+    salesTotal,
+    cogsTotal,
+    purchasesTotal,
+    expensesTotal,
+    grossProfit,
+    netProfit,
+    cashIn,
+    cashOut,
+    cashBalance: roundQty(cashIn - cashOut),
+    stockValue,
+    paidInvoicesCount: paid.length,
+    openInvoicesCount: (data.invoices || []).filter((i) => i.status === "issued").length,
+    productsCount: (data.products || []).length,
+    lowStockCount: lowStock.length,
+    lowStock: lowStock.map((p) => ({ id: p.id, name: p.name, qty: p.qty, unit: p.unit, minQty: p.minQty })),
+  };
+}
+
 function exportBackup() {
   return load();
 }
@@ -573,6 +878,9 @@ function importBackup(parsed) {
         ? parsed.products
         : seedProductsFromCatalog(),
     stockMovements: Array.isArray(parsed.stockMovements) ? parsed.stockMovements : [],
+    purchases: Array.isArray(parsed.purchases) ? parsed.purchases : [],
+    expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
+    cashEntries: Array.isArray(parsed.cashEntries) ? parsed.cashEntries : [],
     catalog: Array.isArray(parsed.catalog) && parsed.catalog.length ? parsed.catalog : defaultCatalog,
   });
   return load();
@@ -596,6 +904,18 @@ module.exports = {
   listStockMovements,
   applyStockMovement,
   lowStockProducts,
+  listPurchases,
+  getPurchase,
+  createPurchase,
+  deletePurchase,
+  listExpenses,
+  createExpense,
+  deleteExpense,
+  listCashEntries,
+  createCashEntry,
+  deleteCashEntry,
+  cashBalance,
+  getReports,
   listSupervisions,
   getSupervision,
   upsertSupervision,
