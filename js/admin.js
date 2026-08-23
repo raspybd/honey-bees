@@ -410,9 +410,10 @@
         <td>${escapeHtml(s.extractionDate || "—")}</td>
         <td><span class="badge ${s.status}">${statusLabel[s.status] || s.status}</span></td>
         <td class="actions">
+          <a href="supervision-contract.html?id=${encodeURIComponent(s.id)}" target="_blank">عقد / طباعة</a>
           <button type="button" data-edit-sup="${s.id}">تعديل</button>
           <button type="button" data-visit-sup="${s.id}">زيارة</button>
-          <button type="button" data-wa-sup="${s.id}">واتساب</button>
+          <button type="button" data-contract-wa="${s.id}">إرسال العقد</button>
           <button type="button" data-del-sup="${s.id}" class="danger">حذف</button>
         </td>
       </tr>
@@ -432,7 +433,7 @@
   supervisionBody.addEventListener("click", (e) => {
     const editId = e.target.getAttribute("data-edit-sup");
     const visitId = e.target.getAttribute("data-visit-sup");
-    const waId = e.target.getAttribute("data-wa-sup");
+    const contractWa = e.target.getAttribute("data-contract-wa");
     const delId = e.target.getAttribute("data-del-sup");
 
     if (editId) {
@@ -469,23 +470,41 @@
       visitCard.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
-    if (waId) {
-      const s = AlRabaaStore.getSupervision(waId);
+    if (contractWa) {
+      const s = AlRabaaStore.getSupervision(contractWa);
       if (!s) return;
+      window.open(`supervision-contract.html?id=${encodeURIComponent(s.id)}`, "_blank");
       const phone = normalizePhone(s.customerPhone) || WA;
+      const today = new Date().toLocaleDateString("ar-KW");
+      const no = `SUP-${s.id.slice(-6).toUpperCase()}`;
       const text = [
-        `متابعة إشراف — الرباعية`,
-        `العميل: ${s.customerName}`,
+        `عقد إشراف على خلايا النحل — الرباعية للنحل والعسل`,
+        `رقم العقد: ${no}`,
+        `تاريخ الإصدار: ${today}`,
+        ``,
+        `الطرف الأول: الرباعية للنحل والعسل`,
+        `الطرف الثاني: ${s.customerName}`,
+        `الجوال: ${s.customerPhone || "—"}`,
+        ``,
         `عدد الخلايا: ${s.hiveCount}`,
         `أرقام الخلايا: ${(s.hiveNumbers || []).join("، ") || "—"}`,
+        `موقع المنحل: ${s.location || s.customerArea || "—"}`,
         `النحال المشرف: ${s.beekeeper || "—"}`,
         `تاريخ التركيب: ${s.installDate || "—"}`,
         `موعد الزيارة القادم: ${s.nextVisitDate || "—"}`,
         `موعد الفرز: ${s.extractionAppointment || "—"}`,
         `تاريخ الفرز: ${s.extractionDate || "—"}`,
         `الرسوم الشهرية: ${money(s.monthlyFee)} د.ك`,
+        ``,
+        `يلتزم الطرف الأول بالفحص الدوري والتنسيق بشأن الفرز.`,
+        `يلتزم الطرف الثاني بتسهيل الوصول وسداد الرسوم المتفق عليها.`,
+        ``,
+        `بالموافقة على هذه الرسالة يُعد العقد مقبولًا وفق البيانات أعلاه.`,
+        `لطباعة نسخة PDF افتح صفحة العقد من لوحة الإدارة.`,
       ].join("\n");
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
+      setTimeout(() => {
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
+      }, 300);
     }
 
     if (delId) {
