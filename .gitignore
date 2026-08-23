@@ -1,7 +1,10 @@
 .DS_Store
 .env
 .env.*
+!.env.example
 *.log
 node_modules/
 .vscode/
 .idea/
+data/db.json
+data/db.json.tmp

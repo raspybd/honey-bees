@@ -13,6 +13,19 @@
   <link rel="stylesheet" href="css/admin.css" />
 </head>
 <body class="admin-body">
+  <div id="login-gate" class="login-gate">
+    <form id="login-form" class="card form-card login-card">
+      <img src="assets/logo.svg" alt="" width="64" height="64" />
+      <h1>لوحة الرباعية</h1>
+      <p>سجّل الدخول لإدارة العملاء والفواتير ومتابعة الإشراف.</p>
+      <label>كلمة المرور
+        <input id="login-password" type="password" required placeholder="كلمة مرور الإدارة" />
+      </label>
+      <button type="submit" class="btn btn-gold">دخول</button>
+    </form>
+  </div>
+
+  <div id="admin-app" class="hidden">
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="brand" href="index.html">
@@ -29,7 +42,10 @@
         <button type="button" class="tab" data-tab="create">فاتورة جديدة</button>
         <button type="button" class="tab" data-tab="backup">نسخ احتياطي</button>
       </nav>
-      <a class="btn btn-gold" href="index.html">الموقع</a>
+      <div class="header-actions">
+        <button type="button" class="btn btn-ghost-dark" id="btn-logout">خروج</button>
+        <a class="btn btn-gold" href="index.html">الموقع</a>
+      </div>
     </div>
   </header>
 
@@ -237,7 +253,7 @@
       <div class="panel-head">
         <div>
           <h1>نسخ احتياطي</h1>
-          <p>البيانات تُحفظ محليًا في المتصفح. صدّر نسخة دوريًا حتى لا تضيع.</p>
+          <p>البيانات تُحفظ على السيرفر (Node.js). صدّر نسخة احتياطية دوريًا.</p>
         </div>
       </div>
       <div class="card form-card">
@@ -247,10 +263,11 @@
             <input type="file" id="btn-import" accept="application/json,.json" hidden />
           </label>
         </div>
-        <p class="hint">الاستيراد يستبدل السجل الحالي على هذا الجهاز (عملاء، فواتير، ومتابعة الإشراف).</p>
+        <p class="hint">الاستيراد يستبدل السجل الحالي على السيرفر (عملاء، فواتير، ومتابعة الإشراف).</p>
       </div>
     </section>
   </main>
+  </div>
 
   <div id="toast" class="toast" hidden></div>
   <script src="js/pricing.js"></script>

@@ -1,14 +1,26 @@
-(() => {
+(async () => {
   const money = (n) =>
     Number(n || 0).toLocaleString("ar-KW", { minimumFractionDigits: 0, maximumFractionDigits: 3 });
   const statusLabel = { active: "نشط", paused: "موقوف مؤقتًا", ended: "منتهي" };
   const params = new URLSearchParams(location.search);
   const id = params.get("id");
   const root = document.getElementById("contract");
-  const rec = id ? AlRabaaStore.getSupervision(id) : null;
+
+  if (!AlRabaaStore.isLoggedIn()) {
+    root.innerHTML = `<p class="error">سجّل الدخول من <a href="admin.html">لوحة الإدارة</a> ثم افتح العقد.</p>`;
+    return;
+  }
+
+  let rec = null;
+  try {
+    rec = id ? await AlRabaaStore.getSupervision(id) : null;
+  } catch (err) {
+    root.innerHTML = `<p class="error">${String(err.message || "تعذر تحميل العقد")}</p>`;
+    return;
+  }
 
   if (!rec) {
-    root.innerHTML = `<p class="error">عقد الإشراف غير موجود على هذا الجهاز. افتحه من متابعة الإشراف بعد حفظ السجل.</p>`;
+    root.innerHTML = `<p class="error">عقد الإشراف غير موجود. افتحه من متابعة الإشراف بعد حفظ السجل.</p>`;
     return;
   }
 

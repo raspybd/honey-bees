@@ -11,6 +11,10 @@
   };
 
   const toastEl = document.getElementById("toast");
+  const loginGate = document.getElementById("login-gate");
+  const adminApp = document.getElementById("admin-app");
+  let catalogCache = [];
+
   function toast(msg) {
     toastEl.textContent = msg;
     toastEl.hidden = false;
@@ -20,13 +24,13 @@
     }, 2400);
   }
 
-  function showTab(name) {
+  async function showTab(name) {
     document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("active", t.dataset.tab === name));
     document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === `panel-${name}`));
-    if (name === "customers") renderCustomers();
-    if (name === "invoices") renderInvoices();
-    if (name === "create") prepareInvoiceForm();
-    if (name === "supervision") renderSupervisions();
+    if (name === "customers") await renderCustomers();
+    if (name === "invoices") await renderInvoices();
+    if (name === "create") await prepareInvoiceForm();
+    if (name === "supervision") await renderSupervisions();
   }
 
   document.querySelectorAll(".tab").forEach((btn) => {
@@ -36,7 +40,6 @@
     btn.addEventListener("click", () => showTab(btn.dataset.goto));
   });
 
-  /* Customers */
   const customerForm = document.getElementById("customer-form");
   const customersBody = document.getElementById("customers-body");
 
@@ -53,10 +56,10 @@
   });
   document.getElementById("btn-cancel-customer").addEventListener("click", resetCustomerForm);
 
-  customerForm.addEventListener("submit", (e) => {
+  customerForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     try {
-      AlRabaaStore.upsertCustomer({
+      await AlRabaaStore.upsertCustomer({
         id: document.getElementById("customer-id").value || undefined,
         name: document.getElementById("customer-name").value,
         phone: document.getElementById("customer-phone").value,
@@ -64,18 +67,19 @@
         notes: document.getElementById("customer-notes").value,
       });
       resetCustomerForm();
-      renderCustomers();
+      await renderCustomers();
       toast("تم حفظ العميل");
     } catch (err) {
       toast(err.message || "تعذر الحفظ");
     }
   });
 
-  document.getElementById("customer-search").addEventListener("input", renderCustomers);
+  document.getElementById("customer-search").addEventListener("input", () => renderCustomers());
 
-  function renderCustomers() {
+  async function renderCustomers() {
     const q = (document.getElementById("customer-search").value || "").trim().toLowerCase();
-    const rows = AlRabaaStore.listCustomers().filter((c) => {
+    const all = await AlRabaaStore.listCustomers();
+    const rows = all.filter((c) => {
       if (!q) return true;
       return [c.name, c.phone, c.area].join(" ").toLowerCase().includes(q);
     });
@@ -97,33 +101,39 @@
       : `<tr><td colspan="4" class="empty">لا يوجد عملاء بعد. أضف أول عميل.</td></tr>`;
   }
 
-  customersBody.addEventListener("click", (e) => {
+  customersBody.addEventListener("click", async (e) => {
     const editId = e.target.getAttribute("data-edit-customer");
     const delId = e.target.getAttribute("data-del-customer");
     if (editId) {
-      const c = AlRabaaStore.getCustomer(editId);
-      if (!c) return;
-      document.getElementById("customer-id").value = c.id;
-      document.getElementById("customer-name").value = c.name || "";
-      document.getElementById("customer-phone").value = c.phone || "";
-      document.getElementById("customer-area").value = c.area || "";
-      document.getElementById("customer-notes").value = c.notes || "";
-      customerForm.classList.remove("hidden");
-      customerForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      try {
+        const c = await AlRabaaStore.getCustomer(editId);
+        document.getElementById("customer-id").value = c.id;
+        document.getElementById("customer-name").value = c.name || "";
+        document.getElementById("customer-phone").value = c.phone || "";
+        document.getElementById("customer-area").value = c.area || "";
+        document.getElementById("customer-notes").value = c.notes || "";
+        customerForm.classList.remove("hidden");
+        customerForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (err) {
+        toast(err.message || "تعذر التحميل");
+      }
     }
     if (delId) {
       if (!confirm("حذف هذا العميل؟")) return;
-      AlRabaaStore.deleteCustomer(delId);
-      renderCustomers();
-      toast("تم حذف العميل");
+      try {
+        await AlRabaaStore.deleteCustomer(delId);
+        await renderCustomers();
+        toast("تم حذف العميل");
+      } catch (err) {
+        toast(err.message || "تعذر الحذف");
+      }
     }
   });
 
-  /* Invoices list */
   const invoicesBody = document.getElementById("invoices-body");
 
-  function renderInvoices() {
-    const rows = AlRabaaStore.listInvoices();
+  async function renderInvoices() {
+    const rows = await AlRabaaStore.listInvoices();
     invoicesBody.innerHTML = rows.length
       ? rows
           .map(
@@ -146,38 +156,39 @@
       : `<tr><td colspan="6" class="empty">لا توجد فواتير بعد.</td></tr>`;
   }
 
-  invoicesBody.addEventListener("click", (e) => {
+  invoicesBody.addEventListener("click", async (e) => {
     const status = e.target.getAttribute("data-status");
     const wa = e.target.getAttribute("data-wa-inv");
     const del = e.target.getAttribute("data-del-inv");
-    if (status) {
-      const [id, st] = status.split("|");
-      AlRabaaStore.updateInvoiceStatus(id, st);
-      renderInvoices();
-      toast("تم تحديث الحالة");
-    }
-    if (wa) {
-      const inv = AlRabaaStore.getInvoice(wa);
-      if (!inv) return;
-      const phone = normalizePhone(inv.customerPhone) || WA;
-      const text = buildInvoiceWhatsApp(inv);
-      window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
-    }
-    if (del) {
-      if (!confirm("حذف هذه الفاتورة؟")) return;
-      AlRabaaStore.deleteInvoice(del);
-      renderInvoices();
-      toast("تم حذف الفاتورة");
+    try {
+      if (status) {
+        const [id, st] = status.split("|");
+        await AlRabaaStore.updateInvoiceStatus(id, st);
+        await renderInvoices();
+        toast("تم تحديث الحالة");
+      }
+      if (wa) {
+        const inv = await AlRabaaStore.getInvoice(wa);
+        const phone = normalizePhone(inv.customerPhone) || WA;
+        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(buildInvoiceWhatsApp(inv))}`, "_blank");
+      }
+      if (del) {
+        if (!confirm("حذف هذه الفاتورة؟")) return;
+        await AlRabaaStore.deleteInvoice(del);
+        await renderInvoices();
+        toast("تم حذف الفاتورة");
+      }
+    } catch (err) {
+      toast(err.message || "تعذر تنفيذ الإجراء");
     }
   });
 
-  /* Create invoice */
   const itemsEl = document.getElementById("invoice-items");
-  const catalog = () => AlRabaaStore.getCatalog();
 
-  function prepareInvoiceForm() {
+  async function prepareInvoiceForm() {
+    catalogCache = await AlRabaaStore.getCatalog();
     const select = document.getElementById("invoice-customer");
-    const customers = AlRabaaStore.listCustomers();
+    const customers = await AlRabaaStore.listCustomers();
     select.innerHTML = customers.length
       ? customers.map((c) => `<option value="${c.id}">${escapeHtml(c.name)} — ${escapeHtml(c.phone || "بدون جوال")}</option>`).join("")
       : `<option value="">أضف عميلًا أولًا</option>`;
@@ -189,7 +200,7 @@
   function addItemRow(preset) {
     const row = document.createElement("div");
     row.className = "item-row";
-    const options = catalog()
+    const options = catalogCache
       .map((p) => `<option value="${p.id}" data-price="${p.price}" data-name="${escapeHtml(p.name)}">${escapeHtml(p.name)} — ${money(p.price)} د.ك</option>`)
       .join("");
     row.innerHTML = `
@@ -243,10 +254,10 @@
     document.getElementById("invoice-total").textContent = money(total);
   }
 
-  document.getElementById("invoice-form").addEventListener("submit", (e) => {
+  document.getElementById("invoice-form").addEventListener("submit", async (e) => {
     e.preventDefault();
     try {
-      const invoice = AlRabaaStore.createInvoice({
+      const invoice = await AlRabaaStore.createInvoice({
         customerId: document.getElementById("invoice-customer").value,
         date: document.getElementById("invoice-date").value,
         notes: document.getElementById("invoice-notes").value,
@@ -256,22 +267,26 @@
       addItemRow();
       updateTotal();
       toast(`تم إصدار ${invoice.number}`);
-      showTab("invoices");
+      await showTab("invoices");
       window.open(`invoice.html?id=${encodeURIComponent(invoice.id)}`, "_blank");
     } catch (err) {
       toast(err.message || "تعذر إصدار الفاتورة");
     }
   });
 
-  /* Backup */
-  document.getElementById("btn-export").addEventListener("click", () => {
-    const blob = new Blob([AlRabaaStore.exportBackup()], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `alrabaa-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast("تم تصدير النسخة");
+  document.getElementById("btn-export").addEventListener("click", async () => {
+    try {
+      const json = await AlRabaaStore.exportBackup();
+      const blob = new Blob([json], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `alrabaa-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+      toast("تم تصدير النسخة");
+    } catch (err) {
+      toast(err.message || "تعذر التصدير");
+    }
   });
 
   document.getElementById("btn-import").addEventListener("change", async (e) => {
@@ -279,11 +294,11 @@
     if (!file) return;
     try {
       const text = await file.text();
-      if (!confirm("سيتم استبدال البيانات الحالية. متابعة؟")) return;
-      AlRabaaStore.importBackup(text);
-      renderCustomers();
-      renderInvoices();
-      renderSupervisions();
+      if (!confirm("سيتم استبدال البيانات الحالية على السيرفر. متابعة؟")) return;
+      await AlRabaaStore.importBackup(text);
+      await renderCustomers();
+      await renderInvoices();
+      await renderSupervisions();
       toast("تم الاستيراد بنجاح");
     } catch (err) {
       toast(err.message || "فشل الاستيراد");
@@ -292,14 +307,13 @@
     }
   });
 
-  /* Supervision follow-up */
   const supervisionForm = document.getElementById("supervision-form");
   const supervisionBody = document.getElementById("supervision-body");
   const visitCard = document.getElementById("visit-form-card");
 
-  function fillSupervisionCustomers(selectedId) {
+  async function fillSupervisionCustomers(selectedId) {
     const select = document.getElementById("sup-customer");
-    const customers = AlRabaaStore.listCustomers();
+    const customers = await AlRabaaStore.listCustomers();
     select.innerHTML = customers.length
       ? customers
           .map(
@@ -317,23 +331,23 @@
     document.getElementById("sup-fee").value = `${money(AlRabaaStore.supervisionFee(n))} د.ك / شهر`;
   }
 
-  function resetSupervisionForm() {
+  async function resetSupervisionForm() {
     supervisionForm.reset();
     document.getElementById("sup-id").value = "";
     supervisionForm.classList.add("hidden");
-    fillSupervisionCustomers();
+    await fillSupervisionCustomers();
     updateSupFee();
   }
 
-  document.getElementById("btn-new-supervision").addEventListener("click", () => {
-    resetSupervisionForm();
+  document.getElementById("btn-new-supervision").addEventListener("click", async () => {
+    await resetSupervisionForm();
     supervisionForm.classList.remove("hidden");
-    fillSupervisionCustomers();
+    await fillSupervisionCustomers();
     document.getElementById("sup-hive-count").value = 5;
     updateSupFee();
     supervisionForm.scrollIntoView({ behavior: "smooth", block: "start" });
   });
-  document.getElementById("btn-cancel-supervision").addEventListener("click", resetSupervisionForm);
+  document.getElementById("btn-cancel-supervision").addEventListener("click", () => resetSupervisionForm());
   document.getElementById("sup-hive-count").addEventListener("input", updateSupFee);
   document.getElementById("sup-hive-numbers").addEventListener("input", () => {
     const count = document
@@ -347,10 +361,10 @@
     }
   });
 
-  supervisionForm.addEventListener("submit", (e) => {
+  supervisionForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     try {
-      AlRabaaStore.upsertSupervision({
+      await AlRabaaStore.upsertSupervision({
         id: document.getElementById("sup-id").value || undefined,
         customerId: document.getElementById("sup-customer").value,
         beekeeper: document.getElementById("sup-beekeeper").value,
@@ -365,20 +379,21 @@
         extractionDate: document.getElementById("sup-extract-date").value,
         notes: document.getElementById("sup-notes").value,
       });
-      resetSupervisionForm();
-      renderSupervisions();
+      await resetSupervisionForm();
+      await renderSupervisions();
       toast("تم حفظ سجل الإشراف");
     } catch (err) {
       toast(err.message || "تعذر الحفظ");
     }
   });
 
-  document.getElementById("sup-search").addEventListener("input", renderSupervisions);
+  document.getElementById("sup-search").addEventListener("input", () => renderSupervisions());
 
-  function renderSupervisions() {
-    fillSupervisionCustomers(document.getElementById("sup-customer").value);
+  async function renderSupervisions() {
+    await fillSupervisionCustomers(document.getElementById("sup-customer").value);
     const q = (document.getElementById("sup-search").value || "").trim().toLowerCase();
-    const rows = AlRabaaStore.listSupervisions().filter((s) => {
+    const all = await AlRabaaStore.listSupervisions();
+    const rows = all.filter((s) => {
       if (!q) return true;
       return [s.customerName, s.customerPhone, s.beekeeper, s.location, ...(s.hiveNumbers || [])]
         .join(" ")
@@ -430,88 +445,88 @@
       : `<tr><td colspan="9" class="empty">لا توجد سجلات إشراف بعد. أضف عميلًا ثم أنشئ سجل إشراف.</td></tr>`;
   }
 
-  supervisionBody.addEventListener("click", (e) => {
+  supervisionBody.addEventListener("click", async (e) => {
     const editId = e.target.getAttribute("data-edit-sup");
     const visitId = e.target.getAttribute("data-visit-sup");
     const contractWa = e.target.getAttribute("data-contract-wa");
     const delId = e.target.getAttribute("data-del-sup");
 
-    if (editId) {
-      const s = AlRabaaStore.getSupervision(editId);
-      if (!s) return;
-      fillSupervisionCustomers(s.customerId);
-      document.getElementById("sup-id").value = s.id;
-      document.getElementById("sup-beekeeper").value = s.beekeeper || "";
-      document.getElementById("sup-hive-count").value = s.hiveCount || "";
-      document.getElementById("sup-hive-numbers").value = (s.hiveNumbers || []).join("، ");
-      document.getElementById("sup-location").value = s.location || "";
-      document.getElementById("sup-status").value = s.status || "active";
-      document.getElementById("sup-install").value = s.installDate || "";
-      document.getElementById("sup-next-visit").value = s.nextVisitDate || "";
-      document.getElementById("sup-last-visit").value = s.lastVisitDate || "";
-      document.getElementById("sup-extract-appt").value = s.extractionAppointment || "";
-      document.getElementById("sup-extract-date").value = s.extractionDate || "";
-      document.getElementById("sup-notes").value = s.notes || "";
-      updateSupFee();
-      supervisionForm.classList.remove("hidden");
-      supervisionForm.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+    try {
+      if (editId) {
+        const s = await AlRabaaStore.getSupervision(editId);
+        await fillSupervisionCustomers(s.customerId);
+        document.getElementById("sup-id").value = s.id;
+        document.getElementById("sup-beekeeper").value = s.beekeeper || "";
+        document.getElementById("sup-hive-count").value = s.hiveCount || "";
+        document.getElementById("sup-hive-numbers").value = (s.hiveNumbers || []).join("، ");
+        document.getElementById("sup-location").value = s.location || "";
+        document.getElementById("sup-status").value = s.status || "active";
+        document.getElementById("sup-install").value = s.installDate || "";
+        document.getElementById("sup-next-visit").value = s.nextVisitDate || "";
+        document.getElementById("sup-last-visit").value = s.lastVisitDate || "";
+        document.getElementById("sup-extract-appt").value = s.extractionAppointment || "";
+        document.getElementById("sup-extract-date").value = s.extractionDate || "";
+        document.getElementById("sup-notes").value = s.notes || "";
+        updateSupFee();
+        supervisionForm.classList.remove("hidden");
+        supervisionForm.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
 
-    if (visitId) {
-      const s = AlRabaaStore.getSupervision(visitId);
-      if (!s) return;
-      document.getElementById("visit-sup-id").value = s.id;
-      document.getElementById("visit-target-label").textContent = `زيارة لـ ${s.customerName} — ${s.hiveCount} خلية`;
-      document.getElementById("visit-date").value = new Date().toISOString().slice(0, 10);
-      document.getElementById("visit-beekeeper").value = s.beekeeper || "";
-      document.getElementById("visit-next").value = "";
-      document.getElementById("visit-notes").value = "";
-      visitCard.classList.remove("hidden");
-      visitCard.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
+      if (visitId) {
+        const s = await AlRabaaStore.getSupervision(visitId);
+        document.getElementById("visit-sup-id").value = s.id;
+        document.getElementById("visit-target-label").textContent = `زيارة لـ ${s.customerName} — ${s.hiveCount} خلية`;
+        document.getElementById("visit-date").value = new Date().toISOString().slice(0, 10);
+        document.getElementById("visit-beekeeper").value = s.beekeeper || "";
+        document.getElementById("visit-next").value = "";
+        document.getElementById("visit-notes").value = "";
+        visitCard.classList.remove("hidden");
+        visitCard.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
 
-    if (contractWa) {
-      const s = AlRabaaStore.getSupervision(contractWa);
-      if (!s) return;
-      window.open(`supervision-contract.html?id=${encodeURIComponent(s.id)}`, "_blank");
-      const phone = normalizePhone(s.customerPhone) || WA;
-      const today = new Date().toLocaleDateString("ar-KW");
-      const no = `SUP-${s.id.slice(-6).toUpperCase()}`;
-      const text = [
-        `عقد إشراف على خلايا النحل — الرباعية للنحل والعسل`,
-        `رقم العقد: ${no}`,
-        `تاريخ الإصدار: ${today}`,
-        ``,
-        `الطرف الأول: الرباعية للنحل والعسل`,
-        `الطرف الثاني: ${s.customerName}`,
-        `الجوال: ${s.customerPhone || "—"}`,
-        ``,
-        `عدد الخلايا: ${s.hiveCount}`,
-        `أرقام الخلايا: ${(s.hiveNumbers || []).join("، ") || "—"}`,
-        `موقع المنحل: ${s.location || s.customerArea || "—"}`,
-        `النحال المشرف: ${s.beekeeper || "—"}`,
-        `تاريخ التركيب: ${s.installDate || "—"}`,
-        `موعد الزيارة القادم: ${s.nextVisitDate || "—"}`,
-        `موعد الفرز: ${s.extractionAppointment || "—"}`,
-        `تاريخ الفرز: ${s.extractionDate || "—"}`,
-        `الرسوم الشهرية: ${money(s.monthlyFee)} د.ك`,
-        ``,
-        `يلتزم الطرف الأول بالفحص الدوري والتنسيق بشأن الفرز.`,
-        `يلتزم الطرف الثاني بتسهيل الوصول وسداد الرسوم المتفق عليها.`,
-        ``,
-        `بالموافقة على هذه الرسالة يُعد العقد مقبولًا وفق البيانات أعلاه.`,
-        `لطباعة نسخة PDF افتح صفحة العقد من لوحة الإدارة.`,
-      ].join("\n");
-      setTimeout(() => {
-        window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
-      }, 300);
-    }
+      if (contractWa) {
+        const s = await AlRabaaStore.getSupervision(contractWa);
+        window.open(`supervision-contract.html?id=${encodeURIComponent(s.id)}`, "_blank");
+        const phone = normalizePhone(s.customerPhone) || WA;
+        const today = new Date().toLocaleDateString("ar-KW");
+        const no = `SUP-${s.id.slice(-6).toUpperCase()}`;
+        const text = [
+          `عقد إشراف على خلايا النحل — الرباعية للنحل والعسل`,
+          `رقم العقد: ${no}`,
+          `تاريخ الإصدار: ${today}`,
+          ``,
+          `الطرف الأول: الرباعية للنحل والعسل`,
+          `الطرف الثاني: ${s.customerName}`,
+          `الجوال: ${s.customerPhone || "—"}`,
+          ``,
+          `عدد الخلايا: ${s.hiveCount}`,
+          `أرقام الخلايا: ${(s.hiveNumbers || []).join("، ") || "—"}`,
+          `موقع المنحل: ${s.location || s.customerArea || "—"}`,
+          `النحال المشرف: ${s.beekeeper || "—"}`,
+          `تاريخ التركيب: ${s.installDate || "—"}`,
+          `موعد الزيارة القادم: ${s.nextVisitDate || "—"}`,
+          `موعد الفرز: ${s.extractionAppointment || "—"}`,
+          `تاريخ الفرز: ${s.extractionDate || "—"}`,
+          `الرسوم الشهرية: ${money(s.monthlyFee)} د.ك`,
+          ``,
+          `يلتزم الطرف الأول بالفحص الدوري والتنسيق بشأن الفرز.`,
+          `يلتزم الطرف الثاني بتسهيل الوصول وسداد الرسوم المتفق عليها.`,
+          ``,
+          `بالموافقة على هذه الرسالة يُعد العقد مقبولًا وفق البيانات أعلاه.`,
+        ].join("\n");
+        setTimeout(() => {
+          window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
+        }, 300);
+      }
 
-    if (delId) {
-      if (!confirm("حذف سجل الإشراف؟")) return;
-      AlRabaaStore.deleteSupervision(delId);
-      renderSupervisions();
-      toast("تم حذف سجل الإشراف");
+      if (delId) {
+        if (!confirm("حذف سجل الإشراف؟")) return;
+        await AlRabaaStore.deleteSupervision(delId);
+        await renderSupervisions();
+        toast("تم حذف سجل الإشراف");
+      }
+    } catch (err) {
+      toast(err.message || "تعذر تنفيذ الإجراء");
     }
   });
 
@@ -519,19 +534,34 @@
     visitCard.classList.add("hidden");
   });
 
-  document.getElementById("btn-save-visit").addEventListener("click", () => {
+  document.getElementById("btn-save-visit").addEventListener("click", async () => {
     try {
-      AlRabaaStore.addSupervisionVisit(document.getElementById("visit-sup-id").value, {
+      await AlRabaaStore.addSupervisionVisit(document.getElementById("visit-sup-id").value, {
         date: document.getElementById("visit-date").value,
         beekeeper: document.getElementById("visit-beekeeper").value,
         nextVisitDate: document.getElementById("visit-next").value,
         notes: document.getElementById("visit-notes").value,
       });
       visitCard.classList.add("hidden");
-      renderSupervisions();
+      await renderSupervisions();
       toast("تم تسجيل الزيارة");
     } catch (err) {
       toast(err.message || "تعذر حفظ الزيارة");
+    }
+  });
+
+  document.getElementById("btn-logout")?.addEventListener("click", async () => {
+    await AlRabaaStore.logout();
+    location.reload();
+  });
+
+  document.getElementById("login-form")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await AlRabaaStore.login(document.getElementById("login-password").value);
+      await enterApp();
+    } catch (err) {
+      toast(err.message || "فشل تسجيل الدخول");
     }
   });
 
@@ -556,5 +586,25 @@
       .replace(/"/g, "&quot;");
   }
 
-  showTab((location.hash || "").replace("#", "") || "customers");
+  async function enterApp() {
+    loginGate?.classList.add("hidden");
+    adminApp?.classList.remove("hidden");
+    await showTab((location.hash || "").replace("#", "") || "customers");
+  }
+
+  async function boot() {
+    if (AlRabaaStore.isLoggedIn()) {
+      try {
+        await AlRabaaStore.listCustomers();
+        await enterApp();
+        return;
+      } catch {
+        await AlRabaaStore.logout();
+      }
+    }
+    loginGate?.classList.remove("hidden");
+    adminApp?.classList.add("hidden");
+  }
+
+  boot();
 })();

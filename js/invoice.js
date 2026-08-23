@@ -1,13 +1,25 @@
-(() => {
+(async () => {
   const money = (n) => Number(n || 0).toLocaleString("ar-KW", { minimumFractionDigits: 0, maximumFractionDigits: 3 });
   const statusLabel = { issued: "صادرة", paid: "مدفوعة", cancelled: "ملغاة" };
   const params = new URLSearchParams(location.search);
   const id = params.get("id");
   const root = document.getElementById("invoice");
-  const inv = id ? AlRabaaStore.getInvoice(id) : null;
+
+  if (!AlRabaaStore.isLoggedIn()) {
+    root.innerHTML = `<p class="error">سجّل الدخول من <a href="admin.html">لوحة الإدارة</a> ثم افتح الفاتورة.</p>`;
+    return;
+  }
+
+  let inv = null;
+  try {
+    inv = id ? await AlRabaaStore.getInvoice(id) : null;
+  } catch (err) {
+    root.innerHTML = `<p class="error">${esc(err.message || "تعذر تحميل الفاتورة")}</p>`;
+    return;
+  }
 
   if (!inv) {
-    root.innerHTML = `<p class="error">الفاتورة غير موجودة على هذا الجهاز. افتحها من صفحة الإدارة بعد إنشائها.</p>`;
+    root.innerHTML = `<p class="error">الفاتورة غير موجودة. افتحها من صفحة الإدارة بعد إنشائها.</p>`;
     return;
   }
 
