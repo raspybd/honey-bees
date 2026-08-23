@@ -405,6 +405,16 @@ th {
   margin-top: 0.15rem;
 }
 
+.admin-note-input {
+  width: 100%;
+  min-width: 8rem;
+  border: 1px solid rgba(26, 18, 8, 0.15);
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  background: #fff;
+}
+
 .actions button:disabled {
   opacity: 0.45;
   cursor: not-allowed;
@@ -465,6 +475,16 @@ th {
 .invoice-total {
   margin: 1rem 0 0;
   font-size: 1.15rem;
+}
+
+.admin-note-input {
+  width: 100%;
+  min-width: 8rem;
+  border: 1px solid rgba(26, 18, 8, 0.15);
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+  font: inherit;
+  background: #fff;
 }
 
 .hint {

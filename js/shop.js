@@ -1,6 +1,7 @@
 (() => {
   const WA = "96599787742";
   const CART_KEY = "alrabaa_cart_v1";
+  const SESSION_KEY = "alrabaa_cart_session";
   const money = (n) => Number(n || 0).toLocaleString("ar-KW", { minimumFractionDigits: 0, maximumFractionDigits: 3 });
 
   const grid = document.getElementById("store-grid");
@@ -14,6 +15,16 @@
 
   let catalog = [];
   let cart = loadCart();
+  let syncTimer = null;
+
+  function getSessionId() {
+    let id = localStorage.getItem(SESSION_KEY);
+    if (!id) {
+      id = `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem(SESSION_KEY, id);
+    }
+    return id;
+  }
 
   function loadCart() {
     try {
@@ -25,9 +36,38 @@
     }
   }
 
+  function contactPayload() {
+    return {
+      customerName: document.getElementById("shop-name")?.value || "",
+      phone: document.getElementById("shop-phone")?.value || "",
+      area: document.getElementById("shop-area")?.value || "",
+      notes: document.getElementById("shop-notes")?.value || "",
+    };
+  }
+
+  function syncCartToServer() {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(async () => {
+      try {
+        await fetch("/api/store/carts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sessionId: getSessionId(),
+            items: cart.map((i) => ({ productId: i.productId, qty: i.qty })),
+            ...contactPayload(),
+          }),
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }, 350);
+  }
+
   function saveCart() {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
     renderCart();
+    syncCartToServer();
   }
 
   function openCart() {
@@ -58,6 +98,7 @@
       catalog = Array.isArray(data) ? data : [];
       renderCatalog();
       renderCart();
+      if (cart.length) syncCartToServer();
     } catch (err) {
       grid.innerHTML = `<p class="store-error">تعذر تحميل المتجر. حدّث الصفحة أو تواصل عبر واتساب.</p>`;
       console.error(err);
@@ -196,6 +237,8 @@
     saveCart();
   });
 
+  checkoutForm.addEventListener("input", () => syncCartToServer());
+
   document.getElementById("btn-open-cart")?.addEventListener("click", openCart);
   document.getElementById("btn-open-cart-shop")?.addEventListener("click", openCart);
   drawer.querySelectorAll("[data-close-cart]").forEach((el) => el.addEventListener("click", closeCart));
@@ -213,6 +256,7 @@
     if (btn) btn.disabled = true;
     try {
       const payload = {
+        sessionId: getSessionId(),
         customerName: document.getElementById("shop-name").value,
         phone: document.getElementById("shop-phone").value,
         area: document.getElementById("shop-area").value,
@@ -256,6 +300,8 @@
     }
   });
 
+  getSessionId();
   renderCart();
+  if (cart.length) syncCartToServer();
   if (location.hash.replace("#", "") === "shop") fetchCatalog();
 })();

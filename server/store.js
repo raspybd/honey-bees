@@ -76,6 +76,7 @@ function empty() {
     expenses: [],
     cashEntries: [],
     orders: [],
+    carts: [],
     purchaseSeq: 5000,
     orderSeq: 7000,
     seq: 1000,
@@ -109,6 +110,7 @@ function load() {
       expenses: Array.isArray(data.expenses) ? data.expenses : [],
       cashEntries: Array.isArray(data.cashEntries) ? data.cashEntries : [],
       orders: Array.isArray(data.orders) ? data.orders : [],
+      carts: Array.isArray(data.carts) ? data.carts : [],
       catalog: Array.isArray(data.catalog) && data.catalog.length ? data.catalog : defaultCatalog,
     };
     if (needsProductSeed) save(merged);
@@ -910,6 +912,125 @@ function nextOrderNumber(data) {
   return `ORD-${y}-${String(data.orderSeq).padStart(4, "0")}`;
 }
 
+function buildCartItems(data, rawItems) {
+  const items = [];
+  for (const row of rawItems || []) {
+    const productId = String(row.productId || "").trim();
+    if (!productId) continue;
+    const product = data.products.find((p) => p.id === productId);
+    if (!product || !product.published) continue;
+    const qty = roundQty(row.qty);
+    if (qty <= 0) continue;
+    const price = roundQty(product.sellPrice);
+    items.push({
+      productId: product.id,
+      name: product.name,
+      unit: product.unit,
+      qty,
+      price,
+      total: roundQty(qty * price),
+    });
+  }
+  return items;
+}
+
+function listStoreCarts() {
+  return (load().carts || [])
+    .slice()
+    .sort((a, b) => (b.updatedAt || "").localeCompare(a.updatedAt || ""));
+}
+
+function getStoreCart(id) {
+  return (load().carts || []).find((c) => c.id === id) || null;
+}
+
+function upsertStoreCart(input) {
+  const data = load();
+  if (!Array.isArray(data.carts)) data.carts = [];
+  const sessionId = String(input.sessionId || "").trim();
+  if (!sessionId || sessionId.length < 8) throw new Error("معرّف الجلسة غير صالح");
+
+  const now = new Date().toISOString();
+  const items = buildCartItems(data, input.items);
+  const customerName = String(input.customerName || "").trim();
+  const phone = String(input.phone || "").trim();
+  const area = String(input.area || "").trim();
+  const notes = String(input.notes || "").trim();
+  const total = roundQty(items.reduce((s, i) => s + i.total, 0));
+
+  let cart = data.carts.find((c) => c.sessionId === sessionId && c.status !== "ordered");
+  if (!items.length) {
+    if (cart && cart.status !== "ordered") {
+      cart.items = [];
+      cart.total = 0;
+      cart.status = "abandoned";
+      cart.customerName = customerName || cart.customerName || "";
+      cart.phone = phone || cart.phone || "";
+      cart.area = area || cart.area || "";
+      cart.notes = notes || cart.notes || "";
+      cart.updatedAt = now;
+      save(data);
+      return cart;
+    }
+    return { ok: true, empty: true };
+  }
+
+  let status = "active";
+  if (customerName || phone) status = "checkout";
+
+  if (cart) {
+    cart.items = items;
+    cart.total = total;
+    cart.customerName = customerName || cart.customerName || "";
+    cart.phone = phone || cart.phone || "";
+    cart.area = area || cart.area || "";
+    cart.notes = notes || cart.notes || "";
+    if (cart.status !== "ordered") cart.status = status;
+    cart.updatedAt = now;
+  } else {
+    cart = {
+      id: uid("cart"),
+      sessionId,
+      status,
+      customerName,
+      phone,
+      area,
+      notes,
+      adminNote: "",
+      items,
+      total,
+      orderId: "",
+      orderNumber: "",
+      createdAt: now,
+      updatedAt: now,
+    };
+    data.carts.unshift(cart);
+  }
+  save(data);
+  return cart;
+}
+
+function updateStoreCartAdmin(id, input) {
+  const data = load();
+  const cart = (data.carts || []).find((c) => c.id === id);
+  if (!cart) throw new Error("السلة غير موجودة");
+  if (input.adminNote != null) cart.adminNote = String(input.adminNote || "").trim();
+  if (input.status) {
+    const st = String(input.status);
+    if (!["active", "checkout", "abandoned", "ordered"].includes(st)) throw new Error("حالة غير صالحة");
+    cart.status = st;
+  }
+  cart.updatedAt = new Date().toISOString();
+  save(data);
+  return cart;
+}
+
+function deleteStoreCart(id) {
+  const data = load();
+  data.carts = (data.carts || []).filter((c) => c.id !== id);
+  save(data);
+}
+
 function listOrders() {
   return (load().orders || []).slice().sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
 }
@@ -958,9 +1079,28 @@ function createStoreOrder(input) {
     items,
     total: roundQty(items.reduce((s, i) => s + i.total, 0)),
     stockDeducted: false,
+    sessionId: String(input.sessionId || "").trim(),
     createdAt: now,
   };
   data.orders.unshift(order);
+
+  const sessionId = order.sessionId;
+  if (sessionId && Array.isArray(data.carts)) {
+    const cart = data.carts.find((c) => c.sessionId === sessionId && c.status !== "ordered");
+    if (cart) {
+      cart.status = "ordered";
+      cart.orderId = order.id;
+      cart.orderNumber = order.number;
+      cart.customerName = name;
+      cart.phone = phone;
+      cart.area = order.area;
+      cart.notes = order.notes;
+      cart.items = items;
+      cart.total = order.total;
+      cart.updatedAt = now;
+    }
+  }
+
   save(data);
   return order;
 }
@@ -1142,6 +1282,7 @@ function importBackup(parsed) {
     expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
     cashEntries: Array.isArray(parsed.cashEntries) ? parsed.cashEntries : [],
     orders: Array.isArray(parsed.orders) ? parsed.orders : [],
+    carts: Array.isArray(parsed.carts) ? parsed.carts : [],
     catalog: Array.isArray(parsed.catalog) && parsed.catalog.length ? parsed.catalog : defaultCatalog,
   });
   return load();
@@ -1178,6 +1319,11 @@ module.exports = {
   cashBalance,
   getReports,
   getStoreCatalog,
+  listStoreCarts,
+  getStoreCart,
+  upsertStoreCart,
+  updateStoreCartAdmin,
+  deleteStoreCart,
   listOrders,
   getOrder,
   createStoreOrder,

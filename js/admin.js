@@ -612,9 +612,45 @@
   }
 
   const ordersBody = document.getElementById("orders-body");
+  const cartsBody = document.getElementById("carts-body");
+  const cartStatusLabel = {
+    active: "في السلة",
+    checkout: "يكتب بياناته",
+    abandoned: "متروكة",
+    ordered: "تحوّلت لطلب",
+  };
 
   async function renderOrders() {
-    const rows = await AlRabaaStore.listOrders();
+    const [rows, carts] = await Promise.all([AlRabaaStore.listOrders(), AlRabaaStore.listStoreCarts()]);
+    const liveCarts = carts.filter((c) => c.status !== "ordered" && (c.items || []).length > 0);
+    cartsBody.innerHTML = liveCarts.length
+      ? liveCarts
+          .map((c) => {
+            const items = (c.items || []).map((i) => `${escapeHtml(i.name)} × ${i.qty}`).join("<br>");
+            const who = c.customerName || c.phone
+              ? `${escapeHtml(c.customerName || "بدون اسم")}<div class="muted" dir="ltr">${escapeHtml(c.phone || "")}</div><div class="muted">${escapeHtml(c.area || "")}</div>`
+              : `<span class="muted">زائر لم يترك رقمًا بعد</span>`;
+            return `
+      <tr>
+        <td>${escapeHtml((c.updatedAt || "").slice(0, 16).replace("T", " "))}</td>
+        <td>${who}</td>
+        <td>${items}</td>
+        <td>${money(c.total)} د.ك</td>
+        <td><span class="badge ${c.status === "checkout" ? "active" : c.status === "abandoned" ? "paused" : ""}">${cartStatusLabel[c.status] || c.status}</span></td>
+        <td>
+          <input class="admin-note-input" data-cart-note="${c.id}" value="${escapeHtml(c.adminNote || "")}" placeholder="خصم / متابعة..." />
+        </td>
+        <td class="actions">
+          <button type="button" data-save-cart-note="${c.id}">حفظ ملاحظة</button>
+          ${c.phone ? `<button type="button" data-wa-cart="${c.id}">واتساب</button>` : ""}
+          <button type="button" data-abandon-cart="${c.id}">تعليم متروكة</button>
+          <button type="button" data-del-cart="${c.id}" class="danger">حذف</button>
+        </td>
+      </tr>`;
+          })
+          .join("")
+      : `<tr><td colspan="7" class="empty">لا سلال نشطة الآن.</td></tr>`;
+
     ordersBody.innerHTML = rows.length
       ? rows
           .map((o) => {
@@ -646,6 +682,44 @@
           .join("")
       : `<tr><td colspan="6" class="empty">لا طلبات متجر بعد.</td></tr>`;
   }
+
+  document.getElementById("btn-refresh-orders")?.addEventListener("click", () => renderOrders());
+
+  cartsBody.addEventListener("click", async (e) => {
+    const saveId = e.target.getAttribute("data-save-cart-note");
+    const waId = e.target.getAttribute("data-wa-cart");
+    const abandonId = e.target.getAttribute("data-abandon-cart");
+    const delId = e.target.getAttribute("data-del-cart");
+    try {
+      if (saveId) {
+        const input = cartsBody.querySelector(`[data-cart-note="${saveId}"]`);
+        await AlRabaaStore.updateStoreCart(saveId, { adminNote: input?.value || "" });
+        toast("تم حفظ الملاحظة");
+      }
+      if (waId) {
+        const carts = await AlRabaaStore.listStoreCarts();
+        const c = carts.find((x) => x.id === waId);
+        if (!c?.phone) return;
+        const lines = (c.items || []).map((i) => `• ${i.name} × ${i.qty}`).join("\n");
+        const note = c.adminNote ? `\nعرض خاص: ${c.adminNote}` : "";
+        const text = `مرحبًا${c.customerName ? ` ${c.customerName}` : ""}\nلاحظنا اهتمامك بمنتجات الرباعية:\n${lines}\nالإجمالي التقريبي: ${money(c.total)} د.ك${note}\nهل نساعدك بإتمام الطلب؟`;
+        window.open(`https://wa.me/${normalizePhone(c.phone)}?text=${encodeURIComponent(text)}`, "_blank");
+      }
+      if (abandonId) {
+        await AlRabaaStore.updateStoreCart(abandonId, { status: "abandoned" });
+        await renderOrders();
+        toast("تم التعليم كمتروكة");
+      }
+      if (delId) {
+        if (!confirm("حذف سجل السلة؟")) return;
+        await AlRabaaStore.deleteStoreCart(delId);
+        await renderOrders();
+        toast("تم الحذف");
+      }
+    } catch (err) {
+      toast(err.message || "تعذر تنفيذ الإجراء");
+    }
+  });
 
   ordersBody.addEventListener("click", async (e) => {
     const confirmId = e.target.getAttribute("data-confirm-order");

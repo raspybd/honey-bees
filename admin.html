@@ -43,7 +43,7 @@
       <p class="side-group-label">العملاء والتشغيل</p>
       <button type="button" class="side-tab active" data-tab="customers">سجل العملاء</button>
       <button type="button" class="side-tab" data-tab="supervision">متابعة الإشراف</button>
-      <button type="button" class="side-tab" data-tab="orders">طلبات المتجر</button>
+      <button type="button" class="side-tab" data-tab="orders">طلبات وسلال المتجر</button>
       <button type="button" class="side-tab" data-tab="invoices">الفواتير</button>
       <button type="button" class="side-tab" data-tab="create">فاتورة جديدة</button>
 
@@ -522,10 +522,32 @@
     <section id="panel-orders" class="panel">
       <div class="panel-head">
         <div>
-          <h1>طلبات المتجر</h1>
-          <p>طلبات السلة من الموقع. التأكيد يخصم المخزون ويُنشئ فاتورة مدفوعة ويسجّل قبضًا في الصندوق.</p>
+          <h1>طلبات وسلال المتجر</h1>
+          <p>السلال تظهر فور إضافة المنتجات (حتى قبل الدفع). الطلبات تظهر بعد إرسال واتساب. التأكيد يخصم المخزون وينشئ فاتورة.</p>
         </div>
+        <button type="button" class="btn btn-dark" id="btn-refresh-orders">تحديث</button>
       </div>
+
+      <h2 class="subhead">سلال نشطة / اهتمام</h2>
+      <p class="hint" style="margin-top:0">تابع الزبائن الذين أضافوا للسلة وشجّعهم بخصم أو رسالة واتساب.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>آخر تحديث</th>
+              <th>التواصل</th>
+              <th>المحتوى</th>
+              <th>المبلغ</th>
+              <th>الحالة</th>
+              <th>ملاحظة إدارية</th>
+              <th>إجراءات</th>
+            </tr>
+          </thead>
+          <tbody id="carts-body"></tbody>
+        </table>
+      </div>
+
+      <h2 class="subhead" style="margin-top:1.5rem">طلبات مرسلة</h2>
       <div class="table-wrap">
         <table>
           <thead>

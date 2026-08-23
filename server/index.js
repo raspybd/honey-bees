@@ -53,6 +53,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.get("/api/store/catalog", (_req, res) => handle(res, () => store.getStoreCatalog()));
+app.post("/api/store/carts", (req, res) => handle(res, () => store.upsertStoreCart(req.body || {})));
 app.post("/api/store/orders", (req, res) => handle(res, () => store.createStoreOrder(req.body || {})));
 
 app.post("/api/login", (req, res) => {
@@ -135,6 +136,16 @@ app.delete("/api/cash/:id", requireAuth, (req, res) =>
 app.get("/api/reports", requireAuth, (_req, res) => handle(res, () => store.getReports()));
 
 app.get("/api/orders", requireAuth, (_req, res) => handle(res, () => store.listOrders()));
+app.get("/api/carts", requireAuth, (_req, res) => handle(res, () => store.listStoreCarts()));
+app.patch("/api/carts/:id", requireAuth, (req, res) =>
+  handle(res, () => store.updateStoreCartAdmin(req.params.id, req.body || {}))
+);
+app.delete("/api/carts/:id", requireAuth, (req, res) =>
+  handle(res, () => {
+    store.deleteStoreCart(req.params.id);
+    return { ok: true };
+  })
+);
 app.get("/api/orders/:id", requireAuth, (req, res) => {
   const item = store.getOrder(req.params.id);
   if (!item) return res.status(404).json({ error: "الطلب غير موجود" });
