@@ -89,7 +89,7 @@
     </div>
 
     ${inv.notes ? `<p class="notes"><strong>ملاحظات:</strong> ${esc(inv.notes)}</p>` : ""}
-    <p class="trust">طلبك يصل بتغليف آمن</p>
+    <p class="trust">يصل طلبك بعناية وأمان</p>
     <footer class="inv-foot">
       <p>هذه فاتورة إلكترونية صادرة من نظام الرباعية.</p>
     </footer>
@@ -99,7 +99,7 @@
   document.getElementById("btn-wa").addEventListener("click", () => {
     const phone = normalizePhone(inv.customerPhone) || "96599787742";
     const lines = inv.items.map((i) => `• ${i.name} × ${i.qty} = ${money(i.total)} د.ك`).join("\n");
-    const text = `فاتورة إلكترونية من الرباعية للنحل والعسل\nرقم الفاتورة: ${inv.number}\nالتاريخ: ${inv.date}\nالعميل: ${inv.customerName}\n\n${lines}\n\nالإجمالي: ${money(inv.total)} د.ك\nطلبك يصل بتغليف آمن · توصيل داخل الكويت ودول الخليج`;
+    const text = `فاتورة إلكترونية من الرباعية للنحل والعسل\nرقم الفاتورة: ${inv.number}\nالتاريخ: ${inv.date}\nالعميل: ${inv.customerName}\n\n${lines}\n\nالإجمالي: ${money(inv.total)} د.ك\nيصل طلبك بعناية وأمان · توصيل داخل الكويت ودول الخليج`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
   });
 
