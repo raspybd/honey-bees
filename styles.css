@@ -1017,6 +1017,33 @@ a {
   font-weight: 600;
 }
 
+.delivery-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.85rem;
+  margin-bottom: 1.2rem;
+}
+
+.delivery-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 1rem 1.05rem;
+  box-shadow: var(--shadow);
+}
+
+.delivery-card h3 {
+  margin: 0 0 0.3rem;
+  font-family: var(--display);
+  color: var(--gold-deep);
+}
+
+.delivery-card p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+}
+
 button.btn {
   font: inherit;
   cursor: pointer;
@@ -1083,7 +1110,8 @@ button.btn {
   .why-grid,
   .start-grid,
   .services-grid,
-  .calc-results {
+  .calc-results,
+  .delivery-grid {
     grid-template-columns: 1fr;
   }
 

@@ -36,7 +36,7 @@
         <h3>البائع</h3>
         <p>الرباعية للنحل والعسل</p>
         <p dir="ltr">+965 99787742</p>
-        <p>توصيل داخل الكويت</p>
+        <p>توصيل داخل الكويت ودول الخليج</p>
       </div>
       <div>
         <h3>العميل</h3>
@@ -87,7 +87,7 @@
   document.getElementById("btn-wa").addEventListener("click", () => {
     const phone = normalizePhone(inv.customerPhone) || "96599787742";
     const lines = inv.items.map((i) => `• ${i.name} × ${i.qty} = ${money(i.total)} د.ك`).join("\n");
-    const text = `فاتورة إلكترونية من الرباعية للنحل والعسل\nرقم الفاتورة: ${inv.number}\nالتاريخ: ${inv.date}\nالعميل: ${inv.customerName}\n\n${lines}\n\nالإجمالي: ${money(inv.total)} د.ك\nطلبك يصل بتغليف آمن`;
+    const text = `فاتورة إلكترونية من الرباعية للنحل والعسل\nرقم الفاتورة: ${inv.number}\nالتاريخ: ${inv.date}\nالعميل: ${inv.customerName}\n\n${lines}\n\nالإجمالي: ${money(inv.total)} د.ك\nطلبك يصل بتغليف آمن · توصيل داخل الكويت ودول الخليج`;
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
   });
 
