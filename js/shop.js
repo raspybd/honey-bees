@@ -140,19 +140,53 @@
 
   function addToCart(productId, qty) {
     const product = catalog.find((p) => p.id === productId);
-    if (!product) return;
+    if (!product) return false;
     const amount = Math.max(1, Math.floor(Number(qty) || 1));
     const existing = cart.find((i) => i.productId === productId);
     if (existing) existing.qty += amount;
     else cart.push({ productId, name: product.name, qty: amount, price: product.price });
     saveCart();
+    return true;
+  }
+
+  function flashCartChip() {
+    const chip = document.getElementById("btn-open-cart");
+    if (!chip) return;
+    chip.classList.add("cart-chip-pulse");
+    clearTimeout(chip._pulseT);
+    chip._pulseT = setTimeout(() => chip.classList.remove("cart-chip-pulse"), 700);
+  }
+
+  async function ensureCatalog() {
+    if (catalog.length) return;
+    const res = await fetch("/api/store/catalog");
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "تعذر التحميل");
+    catalog = Array.isArray(data) ? data : [];
   }
 
   grid.addEventListener("click", (e) => {
     const id = e.target.getAttribute("data-add");
     if (!id) return;
     const qtyInput = grid.querySelector(`[data-qty-for="${id}"]`);
-    addToCart(id, qtyInput ? qtyInput.value : 1);
+    if (addToCart(id, qtyInput ? qtyInput.value : 1)) flashCartChip();
+  });
+
+  document.body.addEventListener("click", async (e) => {
+    const pkgId = e.target.getAttribute("data-add-package");
+    if (!pkgId) return;
+    try {
+      await ensureCatalog();
+      const ok = addToCart(pkgId, 1);
+      if (!ok) {
+        alert("هذه الباقة غير منشورة في المتجر حاليًا. فعّلها من الأصناف في الإدارة.");
+        return;
+      }
+      flashCartChip();
+      openCart();
+    } catch (err) {
+      alert(err.message || "تعذر إضافة الباقة");
+    }
   });
 
   cartItemsEl.addEventListener("click", (e) => {

@@ -637,7 +637,7 @@
                  <button type="button" data-del-order="${o.id}" class="danger">حذف</button>`
               : o.status === "cancelled"
                 ? `<button type="button" data-del-order="${o.id}" class="danger">حذف</button>`
-                : `<span class="muted">مؤكد</span>`
+                : `${o.invoiceId ? `<a href="invoice.html?id=${encodeURIComponent(o.invoiceId)}" target="_blank">فاتورة ${escapeHtml(o.invoiceNumber || "")}</a>` : `<span class="muted">مؤكد</span>`}`
           }
           <button type="button" data-wa-order="${o.id}">واتساب</button>
         </td>

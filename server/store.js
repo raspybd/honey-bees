@@ -824,7 +824,9 @@ function getReports() {
   const paid = (data.invoices || []).filter((i) => i.status === "paid");
   const confirmedOrders = (data.orders || []).filter((o) => o.status === "confirmed");
   const salesInvoices = roundQty(paid.reduce((s, i) => s + (Number(i.total) || 0), 0));
-  const salesOrders = roundQty(confirmedOrders.reduce((s, o) => s + (Number(o.total) || 0), 0));
+  // طلبات مؤكدة بلا فاتورة مرتبطة (قديمة) — لتجنب احتساب مزدوج مع الفواتير الجديدة
+  const orphanOrders = confirmedOrders.filter((o) => !o.invoiceId);
+  const salesOrders = roundQty(orphanOrders.reduce((s, o) => s + (Number(o.total) || 0), 0));
   const salesTotal = roundQty(salesInvoices + salesOrders);
   const cogsInvoices = roundQty(
     paid.reduce((s, i) => {
@@ -835,7 +837,7 @@ function getReports() {
       );
     }, 0)
   );
-  const cogsOrders = roundQty(confirmedOrders.reduce((s, o) => s + (Number(o.cogs) || 0), 0));
+  const cogsOrders = roundQty(orphanOrders.reduce((s, o) => s + (Number(o.cogs) || 0), 0));
   const cogsTotal = roundQty(cogsInvoices + cogsOrders);
   const purchasesTotal = roundQty((data.purchases || []).reduce((s, p) => s + (Number(p.total) || 0), 0));
   const expensesTotal = roundQty((data.expenses || []).reduce((s, e) => s + (Number(e.amount) || 0), 0));
@@ -1058,6 +1060,42 @@ function confirmStoreOrder(id) {
     data.customers.unshift(customer);
   }
   order.customerId = customer.id;
+
+  // فاتورة مرتبطة (مدفوعة ومخصومة مسبقًا — بدون خصم/قبض مكرر)
+  if (!order.invoiceId) {
+    const invoice = {
+      id: uid("inv"),
+      number: nextInvoiceNumber(data),
+      customerId: customer.id,
+      customerName: customer.name,
+      customerPhone: customer.phone,
+      customerArea: customer.area || order.area || "",
+      date: now.slice(0, 10),
+      items: (order.items || []).map((i) => ({
+        productId: i.productId,
+        name: i.name,
+        qty: i.qty,
+        price: i.price,
+        total: i.total,
+        costPrice: i.costPrice,
+        costTotal: i.costTotal,
+      })),
+      subtotal: roundQty(order.total),
+      total: roundQty(order.total),
+      cogs: roundQty(order.cogs || 0),
+      notes: `من طلب المتجر ${order.number}${order.notes ? ` — ${order.notes}` : ""}`,
+      status: "paid",
+      stockDeducted: true,
+      stockDeductedAt: now,
+      orderId: order.id,
+      orderNumber: order.number,
+      createdAt: now,
+      updatedAt: now,
+    };
+    data.invoices.unshift(invoice);
+    order.invoiceId = invoice.id;
+    order.invoiceNumber = invoice.number;
+  }
 
   save(data);
   return order;
