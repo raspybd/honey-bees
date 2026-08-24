@@ -70,16 +70,16 @@
 
 .admin-side-tabs .side-group-label {
   margin: 1.1rem 0 0.35rem;
-  padding: 0.35rem 0.55rem 0.2rem;
+  padding: 0.5rem 0.75rem;
   font-size: 1.2rem;
   line-height: 1.35;
   font-weight: 700;
   font-family: "Noto Naskh Arabic", serif;
   letter-spacing: 0;
   color: #1a1208;
-  background: transparent;
-  border: none;
-  border-radius: 0;
+  background: linear-gradient(135deg, #f0e2c4, #e8d4a8);
+  border: 1px solid rgba(140, 106, 18, 0.22);
+  border-radius: 12px;
 }
 
 .admin-side-tabs .side-group-label:first-child {
