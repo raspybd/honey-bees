@@ -10,7 +10,6 @@ const PORT = Number(process.env.PORT) || 3000;
 const SITE_URL = process.env.SITE_URL || "https://the4beez.com";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "alrabaa2026";
 const tokens = new Map();
-const customerTokens = new Map(); // token -> { accountId, at }
 
 app.set("trust proxy", 1);
 app.use(cors());
@@ -37,12 +36,10 @@ function requireAuth(req, res, next) {
 function requireCustomer(req, res, next) {
   const header = req.headers.authorization || "";
   const token = header.startsWith("Bearer ") ? header.slice(7) : "";
-  const session = token ? customerTokens.get(token) : null;
+  const session = store.getCustomerSession(token);
   if (!session?.accountId) {
     return res.status(401).json({ error: "سجّل الدخول أولًا للمتابعة" });
   }
-  session.at = Date.now();
-  customerTokens.set(token, session);
   req.customerToken = token;
   req.accountId = session.accountId;
   next();
@@ -69,8 +66,7 @@ app.get("/api/health", (_req, res) => {
 app.post("/api/store/register", (req, res) => {
   try {
     const account = store.registerAccount(req.body || {});
-    const token = createToken();
-    customerTokens.set(token, { accountId: account.id, at: Date.now() });
+    const token = store.createCustomerSession(account.id);
     res.json({ token, account });
   } catch (err) {
     res.status(400).json({ error: err.message || "تعذر إنشاء الحساب" });
@@ -80,8 +76,7 @@ app.post("/api/store/register", (req, res) => {
 app.post("/api/store/login", (req, res) => {
   try {
     const account = store.loginAccount(req.body || {});
-    const token = createToken();
-    customerTokens.set(token, { accountId: account.id, at: Date.now() });
+    const token = store.createCustomerSession(account.id);
     res.json({ token, account });
   } catch (err) {
     res.status(401).json({ error: err.message || "تعذر تسجيل الدخول" });
@@ -94,8 +89,10 @@ app.get("/api/store/me", requireCustomer, (req, res) => {
   res.json({ account });
 });
 
-app.post("/api/store/logout", requireCustomer, (req, res) => {
-  customerTokens.delete(req.customerToken);
+app.post("/api/store/logout", (req, res) => {
+  const header = req.headers.authorization || "";
+  const token = header.startsWith("Bearer ") ? header.slice(7) : "";
+  store.deleteCustomerSession(token);
   res.json({ ok: true });
 });
 

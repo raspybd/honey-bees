@@ -79,6 +79,7 @@ function empty() {
     orders: [],
     carts: [],
     accounts: [],
+    customerSessions: {},
     purchaseSeq: 5000,
     orderSeq: 7000,
     seq: 1000,
@@ -114,6 +115,10 @@ function load() {
       orders: Array.isArray(data.orders) ? data.orders : [],
       carts: Array.isArray(data.carts) ? data.carts : [],
       accounts: Array.isArray(data.accounts) ? data.accounts : [],
+      customerSessions:
+        data.customerSessions && typeof data.customerSessions === "object" && !Array.isArray(data.customerSessions)
+          ? data.customerSessions
+          : {},
       catalog: Array.isArray(data.catalog) && data.catalog.length ? data.catalog : defaultCatalog,
     };
     if (needsProductSeed) save(merged);
@@ -245,6 +250,46 @@ function loginAccount(input) {
 function getAccount(id) {
   const account = (load().accounts || []).find((a) => a.id === id) || null;
   return publicAccount(account);
+}
+
+function createCustomerSession(accountId) {
+  const data = load();
+  if (!data.customerSessions || typeof data.customerSessions !== "object") data.customerSessions = {};
+  const token = crypto.randomBytes(24).toString("hex");
+  const now = Date.now();
+  // prune sessions older than 60 days
+  const maxAge = 60 * 24 * 60 * 60 * 1000;
+  for (const [key, val] of Object.entries(data.customerSessions)) {
+    if (!val || now - Number(val.at || 0) > maxAge) delete data.customerSessions[key];
+  }
+  data.customerSessions[token] = { accountId, at: now };
+  save(data);
+  return token;
+}
+
+function touchCustomerSession(token) {
+  const data = load();
+  if (!data.customerSessions || !data.customerSessions[token]) return null;
+  data.customerSessions[token].at = Date.now();
+  save(data);
+  return data.customerSessions[token];
+}
+
+function getCustomerSession(token) {
+  if (!token) return null;
+  const data = load();
+  const session = data.customerSessions && data.customerSessions[token];
+  if (!session || !session.accountId) return null;
+  return session;
+}
+
+function deleteCustomerSession(token) {
+  if (!token) return;
+  const data = load();
+  if (data.customerSessions && data.customerSessions[token]) {
+    delete data.customerSessions[token];
+    save(data);
+  }
 }
 
 function listCustomers() {
@@ -1388,6 +1433,10 @@ function importBackup(parsed) {
     orders: Array.isArray(parsed.orders) ? parsed.orders : [],
     carts: Array.isArray(parsed.carts) ? parsed.carts : [],
     accounts: Array.isArray(parsed.accounts) ? parsed.accounts : [],
+    customerSessions:
+      parsed.customerSessions && typeof parsed.customerSessions === "object" && !Array.isArray(parsed.customerSessions)
+        ? parsed.customerSessions
+        : {},
     catalog: Array.isArray(parsed.catalog) && parsed.catalog.length ? parsed.catalog : defaultCatalog,
   });
   return load();
@@ -1401,6 +1450,10 @@ module.exports = {
   registerAccount,
   loginAccount,
   getAccount,
+  createCustomerSession,
+  getCustomerSession,
+  touchCustomerSession,
+  deleteCustomerSession,
   listInvoices,
   getInvoice,
   createInvoice,

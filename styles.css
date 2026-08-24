@@ -1207,7 +1207,12 @@ button.btn {
   font-size: 0.9rem;
 }
 
-.account-logged {
+.account-logged[hidden],
+.account-login-btn[hidden] {
+  display: none !important;
+}
+
+.account-logged:not([hidden]) {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;

@@ -545,15 +545,21 @@
     <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="auth-title">
       <button type="button" class="cart-close" data-close-auth aria-label="إغلاق">×</button>
       <h2 id="auth-title">تسجيل الدخول</h2>
-      <p class="auth-lead">للتسوق وإضافة المنتجات، سجّل الدخول أو أنشئ حسابًا.</p>
+      <p class="auth-lead">للتسوق أدخل جوالك وكلمة المرور، أو أنشئ حسابًا جديدًا.</p>
       <div class="auth-tabs">
-        <button type="button" class="auth-tab active" data-auth-mode="login">دخول</button>
+        <button type="button" class="auth-tab active" data-auth-mode="login">لدي حساب</button>
         <button type="button" class="auth-tab" data-auth-mode="register">حساب جديد</button>
       </div>
-      <form id="auth-form" class="auth-form">
-        <label id="auth-name-wrap" hidden>الاسم <input id="auth-name" autocomplete="name" /></label>
-        <label>الجوال <input id="auth-phone" required autocomplete="tel" inputmode="tel" /></label>
-        <label>كلمة المرور <input id="auth-password" type="password" required autocomplete="current-password" minlength="4" /></label>
+      <form id="auth-form" class="auth-form" novalidate>
+        <label id="auth-name-wrap" hidden>الاسم الكامل
+          <input id="auth-name" name="name" autocomplete="name" />
+        </label>
+        <label>رقم الجوال
+          <input id="auth-phone" name="phone" required autocomplete="tel" inputmode="tel" />
+        </label>
+        <label>كلمة المرور
+          <input id="auth-password" name="password" type="password" required autocomplete="current-password" minlength="4" />
+        </label>
         <p id="auth-error" class="auth-error" hidden></p>
         <button type="submit" class="btn btn-gold btn-lg" id="auth-submit">دخول</button>
       </form>

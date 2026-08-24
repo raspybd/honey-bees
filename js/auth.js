@@ -1,28 +1,52 @@
 (() => {
   const TOKEN_KEY = "alrabaa_customer_token";
+  const ACCOUNT_KEY = "alrabaa_customer_account";
+
   const modal = document.getElementById("auth-modal");
   const form = document.getElementById("auth-form");
   const nameWrap = document.getElementById("auth-name-wrap");
   const errEl = document.getElementById("auth-error");
   const submitBtn = document.getElementById("auth-submit");
   const titleEl = document.getElementById("auth-title");
+  const loginBtn = document.getElementById("btn-open-login");
+  const loggedBox = document.getElementById("account-logged");
+  const nameEl = document.getElementById("account-name");
+  const logoutBtn = document.getElementById("btn-logout-account");
+
   if (!modal || !form) return;
 
   let mode = "login";
-  let account = null;
-  let pendingAction = null;
+  let account = readCachedAccount();
+  let pendingTab = "";
+  let ready = false;
+
+  function readCachedAccount() {
+    try {
+      return JSON.parse(localStorage.getItem(ACCOUNT_KEY) || "null");
+    } catch {
+      return null;
+    }
+  }
 
   function getToken() {
     return localStorage.getItem(TOKEN_KEY) || "";
   }
 
-  function setToken(token) {
+  function setSession(token, nextAccount) {
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
+    if (nextAccount) localStorage.setItem(ACCOUNT_KEY, JSON.stringify(nextAccount));
+    else localStorage.removeItem(ACCOUNT_KEY);
+    account = nextAccount || null;
+    renderHeader();
+  }
+
+  function clearSession() {
+    setSession("", null);
   }
 
   function isLoggedIn() {
-    return Boolean(getToken() && account);
+    return Boolean(getToken() && account && account.id);
   }
 
   function getAccount() {
@@ -31,13 +55,8 @@
 
   function showError(msg) {
     if (!errEl) return;
-    if (!msg) {
-      errEl.hidden = true;
-      errEl.textContent = "";
-      return;
-    }
-    errEl.hidden = false;
-    errEl.textContent = msg;
+    errEl.hidden = !msg;
+    errEl.textContent = msg || "";
   }
 
   function setMode(next) {
@@ -47,53 +66,59 @@
     });
     if (nameWrap) nameWrap.hidden = mode !== "register";
     const nameInput = document.getElementById("auth-name");
-    if (nameInput) nameInput.required = mode === "register";
+    if (nameInput) {
+      nameInput.required = mode === "register";
+      if (mode !== "register") nameInput.value = "";
+    }
     if (titleEl) titleEl.textContent = mode === "register" ? "إنشاء حساب" : "تسجيل الدخول";
-    if (submitBtn) submitBtn.textContent = mode === "register" ? "إنشاء الحساب" : "دخول";
+    if (submitBtn) submitBtn.textContent = mode === "register" ? "إنشاء الحساب ودخول" : "دخول";
     const pass = document.getElementById("auth-password");
     if (pass) pass.autocomplete = mode === "register" ? "new-password" : "current-password";
     showError("");
   }
 
+  function fillCheckout() {
+    if (!account) return;
+    const name = document.getElementById("shop-name");
+    const phone = document.getElementById("shop-phone");
+    if (name) name.value = account.name || "";
+    if (phone) phone.value = account.phone || "";
+  }
+
   function renderHeader() {
-    const logged = document.getElementById("account-logged");
-    const loginBtn = document.getElementById("btn-open-login");
-    const nameEl = document.getElementById("account-name");
-    if (!logged || !loginBtn) return;
-    if (account) {
+    if (!loginBtn || !loggedBox) return;
+    if (isLoggedIn()) {
       loginBtn.hidden = true;
-      logged.hidden = false;
-      if (nameEl) nameEl.textContent = account.name || account.phone || "";
+      loggedBox.hidden = false;
+      if (nameEl) nameEl.textContent = account.name || account.phone || "عميل";
       document.body.classList.add("is-logged-in");
-      fillCheckoutFromAccount();
+      fillCheckout();
     } else {
       loginBtn.hidden = false;
-      logged.hidden = true;
+      loggedBox.hidden = true;
+      if (nameEl) nameEl.textContent = "";
       document.body.classList.remove("is-logged-in");
     }
   }
 
-  function fillCheckoutFromAccount() {
-    if (!account) return;
-    const name = document.getElementById("shop-name");
-    const phone = document.getElementById("shop-phone");
-    if (name && !name.value) name.value = account.name || "";
-    if (phone && !phone.value) phone.value = account.phone || "";
-  }
-
-  function openLogin(action) {
-    pendingAction = typeof action === "function" ? action : null;
-    setMode("login");
+  function openLogin(options = {}) {
+    pendingTab = options.tab || "";
+    setMode(options.mode || "login");
+    showError(options.message || "");
     modal.hidden = false;
     document.body.classList.add("auth-open");
-    document.getElementById("auth-phone")?.focus();
+    setTimeout(() => {
+      const focusId = mode === "register" ? "auth-name" : "auth-phone";
+      document.getElementById(focusId)?.focus();
+    }, 50);
   }
 
   function closeLogin() {
     modal.hidden = true;
     document.body.classList.remove("auth-open");
-    pendingAction = null;
+    pendingTab = "";
     showError("");
+    if (submitBtn) submitBtn.disabled = false;
   }
 
   async function api(path, options = {}) {
@@ -122,97 +147,142 @@
     const token = getToken();
     if (!token) {
       account = null;
+      localStorage.removeItem(ACCOUNT_KEY);
       renderHeader();
+      ready = true;
       return null;
     }
+    // show cached account immediately
+    if (account) renderHeader();
     try {
       const data = await api("/me");
-      account = data.account;
-      renderHeader();
+      setSession(token, data.account);
+      window.dispatchEvent(new CustomEvent("alrabaa:auth", { detail: { account } }));
+      ready = true;
       return account;
     } catch {
-      setToken("");
-      account = null;
-      renderHeader();
+      clearSession();
+      ready = true;
       return null;
     }
   }
 
-  function requireLogin(action) {
-    if (isLoggedIn()) {
-      if (typeof action === "function") action();
-      return true;
+  function goPendingTab() {
+    const tab = pendingTab;
+    pendingTab = "";
+    if (!tab) return;
+    const btn = document.querySelector(`.side-tab[data-tab="${tab}"]`);
+    if (btn) {
+      // temporarily mark logged so gate won't block
+      history.replaceState(null, "", `#${tab}`);
+      btn.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
     }
-    openLogin(action);
+  }
+
+  function requireLogin(options = {}) {
+    if (isLoggedIn()) return true;
+    openLogin(options);
     return false;
   }
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     showError("");
-    if (submitBtn) submitBtn.disabled = true;
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "جاري التحقق...";
+    }
     try {
-      const body = {
-        phone: document.getElementById("auth-phone").value,
-        password: document.getElementById("auth-password").value,
-      };
-      if (mode === "register") body.name = document.getElementById("auth-name").value;
+      const phone = String(document.getElementById("auth-phone").value || "").trim();
+      const password = String(document.getElementById("auth-password").value || "");
+      if (!phone) throw new Error("أدخل رقم الجوال");
+      if (password.length < 4) throw new Error("كلمة المرور 4 أحرف على الأقل");
+      const body = { phone, password };
+      if (mode === "register") {
+        body.name = String(document.getElementById("auth-name").value || "").trim();
+        if (!body.name) throw new Error("أدخل الاسم");
+      }
       const data = await api(mode === "register" ? "/register" : "/login", { method: "POST", body });
-      setToken(data.token);
-      account = data.account;
-      renderHeader();
-      const after = pendingAction;
-      closeLogin();
+      setSession(data.token, data.account);
       form.reset();
-      if (typeof after === "function") after();
+      setMode("login");
+      const tab = pendingTab;
+      closeLogin();
+      pendingTab = tab;
       window.dispatchEvent(new CustomEvent("alrabaa:auth", { detail: { account } }));
+      goPendingTab();
     } catch (err) {
       showError(err.message || "تعذر المتابعة");
+      if (submitBtn) submitBtn.textContent = mode === "register" ? "إنشاء الحساب ودخول" : "دخول";
     } finally {
       if (submitBtn) submitBtn.disabled = false;
     }
   });
 
   document.querySelectorAll(".auth-tab").forEach((tab) => {
-    tab.addEventListener("click", () => setMode(tab.dataset.authMode));
+    tab.addEventListener("click", (e) => {
+      e.preventDefault();
+      setMode(tab.dataset.authMode);
+    });
   });
-  document.getElementById("btn-open-login")?.addEventListener("click", () => openLogin());
-  document.getElementById("btn-logout-account")?.addEventListener("click", async () => {
-    try {
-      if (getToken()) await api("/logout", { method: "POST", body: {} });
-    } catch {
-      /* ignore */
-    }
-    setToken("");
-    account = null;
-    renderHeader();
+
+  loginBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    openLogin({ mode: "login" });
+  });
+
+  logoutBtn?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const token = getToken();
+    clearSession();
     window.dispatchEvent(new CustomEvent("alrabaa:auth", { detail: { account: null } }));
+    try {
+      if (token) {
+        await fetch("/api/store/logout", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          body: "{}",
+        });
+      }
+    } catch {
+      /* ignore network */
+    }
   });
-  modal.querySelectorAll("[data-close-auth]").forEach((el) => el.addEventListener("click", closeLogin));
+
+  modal.querySelectorAll("[data-close-auth]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      closeLogin();
+    });
+  });
+
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape" && !modal.hidden) closeLogin();
   });
 
-  // Gate shopping actions / shop & packages tabs
+  // Gate shopping: open login instead of blocking forever
   document.addEventListener(
     "click",
     (e) => {
+      if (!ready) return;
+      if (isLoggedIn()) return;
+      if (!modal.hidden) return; // already open
       const gate = e.target.closest(
         '[data-tab="shop"], [data-tab-link="shop"], [data-tab="packages"], [data-tab-link="packages"], [data-add], [data-add-package], #btn-open-cart, #btn-open-cart-shop'
       );
       if (!gate) return;
-      if (isLoggedIn()) return;
+      // never gate the auth UI itself
+      if (gate.closest("#auth-modal") || gate.id === "btn-open-login" || gate.id === "btn-logout-account") return;
+
       e.preventDefault();
       e.stopPropagation();
-      const tab = gate.getAttribute("data-tab") || gate.getAttribute("data-tab-link");
-      openLogin(() => {
-        if (tab === "shop" || tab === "packages") {
-          document.querySelector(`.side-tab[data-tab="${tab}"]`)?.click();
-        } else if (gate.id === "btn-open-cart" || gate.id === "btn-open-cart-shop") {
-          document.getElementById("btn-open-cart")?.click();
-        } else {
-          gate.click();
-        }
+      const tab = gate.getAttribute("data-tab") || gate.getAttribute("data-tab-link") || "";
+      openLogin({
+        tab: tab === "shop" || tab === "packages" ? tab : "shop",
+        message: "سجّل الدخول أولاً لإضافة المنتجات والتسوق.",
       });
     },
     true
@@ -228,5 +298,6 @@
     api,
   };
 
+  renderHeader();
   refreshMe();
 })();
