@@ -55,6 +55,19 @@
   min-height: calc(100vh - 120px);
 }
 
+.admin-side-tabs {
+  position: sticky;
+  top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.75rem;
+  border-radius: 22px;
+  background: rgba(255, 253, 248, 0.92);
+  border: 1px solid rgba(26, 18, 8, 0.12);
+  box-shadow: 0 16px 40px rgba(26, 18, 8, 0.08);
+}
+
 .admin-side-tabs .side-group-label {
   margin: 1rem 0 0.45rem;
   padding: 0.55rem 0.85rem;
