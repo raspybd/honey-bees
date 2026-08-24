@@ -930,6 +930,30 @@ a {
   box-shadow: 0 8px 18px rgba(201, 162, 39, 0.28);
 }
 
+.home-more {
+  margin: 0 0 1.4rem;
+  padding: 0 0.2rem;
+}
+
+.home-more-label {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #6a5844;
+}
+
+.home-more-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.home-more-actions .btn {
+  flex: 1 1 auto;
+  min-width: 8.5rem;
+  text-align: center;
+}
+
 .side-group-label {
   margin: 0.55rem 0.4rem 0.1rem;
   padding: 0;

@@ -56,17 +56,20 @@
 }
 
 .admin-side-tabs .side-group-label {
-  margin: 0.65rem 0.35rem 0.15rem;
-  padding: 0.2rem 0.45rem;
-  font-size: 0.72rem;
+  margin: 0.85rem 0 0.35rem;
+  padding: 0.65rem 0.85rem 0.35rem;
+  font-size: 0.98rem;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  color: #8a7358;
-  text-transform: none;
+  font-family: "Noto Naskh Arabic", serif;
+  color: #1a1208;
+  border-top: 1px solid rgba(26, 18, 8, 0.14);
+  background: transparent;
 }
 
 .admin-side-tabs .side-group-label:first-child {
   margin-top: 0;
+  padding-top: 0.35rem;
+  border-top: 0;
 }
 
 .admin-side-tabs {

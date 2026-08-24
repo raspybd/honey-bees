@@ -1,8 +1,11 @@
 (() => {
   const tabs = [...document.querySelectorAll(".side-tab")];
   const panels = [...document.querySelectorAll(".tab-panel")];
-  const valid = new Set(tabs.map((t) => t.dataset.tab));
-  const aliases = { products: "shop", store: "shop", متجر: "shop" };
+  const valid = new Set([
+    ...tabs.map((t) => t.dataset.tab),
+    ...panels.map((p) => p.dataset.panel).filter(Boolean),
+  ]);
+  const aliases = { products: "shop", store: "shop", متجر: "shop", values: "home" };
 
   function resolve(name) {
     const raw = String(name || "").trim();
