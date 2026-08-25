@@ -59,8 +59,25 @@ app.get("/api/health", (_req, res) => {
     ok: true,
     service: "alrabaa-node",
     site: SITE_URL,
+    maintenance: maintenanceOn(),
     time: new Date().toISOString(),
   });
+});
+
+function maintenanceOn() {
+  const v = String(process.env.MAINTENANCE ?? "on").trim().toLowerCase();
+  return !["0", "false", "off", "no"].includes(v);
+}
+
+app.use((req, res, next) => {
+  if (!maintenanceOn()) return next();
+  if (req.path === "/api/health") return next();
+  if (req.path === "/maintenance.html" || req.path.startsWith("/assets/")) return next();
+  if (req.accepts("html")) {
+    res.status(503).set("Retry-After", "86400");
+    return res.sendFile(path.join(__dirname, "..", "maintenance.html"));
+  }
+  return res.status(503).json({ ok: false, error: "الموقع قيد التطوير" });
 });
 
 app.post("/api/store/register", (req, res) => {
